@@ -11,21 +11,35 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
 
-public class MainActivity extends ActionBarActivity implements SensorEventListener {
-    private SensorManager mSensorManager;
-    private Sensor mAccelerometer;
+import sensors.AccelerometerHandler;
+import sensors.SensorHandler;
+
+// TODO check android target api (20 or 21 okay?)
+// TODO refactor sensor data fetcher into a different class
+public class MainActivity extends ActionBarActivity {
+
     private TextView tv, tv1, tv2;
+    private TextView screenLog;
+
+    private SensorManager sensorManager;
+    private SensorHandler accelHandler;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
 
+        // set up sensor handlers
+        this.sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE)
+        this.accelHandler = new AccelerometerHandler(getSensorManager());
+
+        // accelerometer UI elements
         tv = (TextView) findViewById(R.id.xval);
         tv1 = (TextView) findViewById(R.id.yval);
         tv2 = (TextView) findViewById(R.id.zval);
 
+        // mqtt UI elements
+        this.screenLog = (TextView) findViewById(R.id.screenLog);
     }
 
     @Override
@@ -50,33 +64,11 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         return super.onOptionsItemSelected(item);
     }
 
-    @Override
-    public void onSensorChanged(SensorEvent event) {
-        float x = event.values[0];
-        float y = event.values[1];
-        float z = event.values[2];
-        tv.setText(String.format("X axis\t\t%f", x));
-        tv1.setText(String.format("Y axis" + "\t\t%f", y));
-        tv2.setText(String.format("Z axis" + "\t\t%f", z));
-
+    public SensorManager getSensorManager() {
+        return this.sensorManager;
     }
 
-
-    @Override
-    public void onAccuracyChanged(Sensor sensor, int accuracy) {
-        // do something if sensor accuracy changes
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        mSensorManager.unregisterListener(this);
-
+    public SensorHandler getAccelHandler(){
+        return this.accelHandler;
     }
 }
