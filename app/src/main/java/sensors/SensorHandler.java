@@ -4,8 +4,13 @@ package sensors;
 import android.hardware.Sensor;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.view.View;
 
-public abstract class SensorHandler implements SensorEventListener {
+import java.util.Observable;
+
+import sensordata.SensorDataSet;
+
+public abstract class SensorHandler extends Observable implements SensorEventListener {
 
     private SensorManager sensorManager;
     private Sensor sensor;
@@ -25,4 +30,10 @@ public abstract class SensorHandler implements SensorEventListener {
     public Sensor getSensor() {
         return sensor;
     }
+
+    public abstract void updateScreen();
+
+    public abstract void setViews(View... views);
+
+    public abstract SensorDataSet getSensorDataSet();
 }

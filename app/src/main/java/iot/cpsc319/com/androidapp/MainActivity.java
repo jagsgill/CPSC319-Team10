@@ -1,9 +1,6 @@
 package iot.cpsc319.com.androidapp;
 
 import android.content.Context;
-import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
@@ -11,14 +8,15 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
 
+import java.util.Observable;
+import java.util.Observer;
+
 import sensors.AccelerometerHandler;
 import sensors.SensorHandler;
 
 // TODO check android target api (20 or 21 okay?)
-// TODO refactor sensor data fetcher into a different class
-public class MainActivity extends ActionBarActivity {
+public class MainActivity extends ActionBarActivity implements Observer {
 
-    private TextView tv, tv1, tv2;
     private TextView screenLog;
 
     private SensorManager sensorManager;
@@ -30,13 +28,17 @@ public class MainActivity extends ActionBarActivity {
         setContentView(R.layout.activity_main);
 
         // set up sensor handlers
-        this.sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE)
+        this.sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         this.accelHandler = new AccelerometerHandler(getSensorManager());
 
-        // accelerometer UI elements
-        tv = (TextView) findViewById(R.id.xval);
-        tv1 = (TextView) findViewById(R.id.yval);
-        tv2 = (TextView) findViewById(R.id.zval);
+        // set up observables for sensor value changes
+        getAccelHandler().addObserver(this);
+
+        // send sensor UI elements to their handlers
+        TextView xView = (TextView) findViewById(R.id.xval);
+        TextView yView = (TextView) findViewById(R.id.yval);
+        TextView zView = (TextView) findViewById(R.id.zval);
+        getAccelHandler().setViews(xView, yView, zView);
 
         // mqtt UI elements
         this.screenLog = (TextView) findViewById(R.id.screenLog);
@@ -70,5 +72,14 @@ public class MainActivity extends ActionBarActivity {
 
     public SensorHandler getAccelHandler(){
         return this.accelHandler;
+    }
+
+    @Override
+    public void update(Observable observable, Object data) {
+        if (observable instanceof SensorHandler){
+            ((SensorHandler) observable).updateScreen();
+        } else{
+            throw new Error("Trying to observe something that's not a SensorHandler: " + observable.getClass());
+        }
     }
 }

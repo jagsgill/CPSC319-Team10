@@ -1,22 +1,25 @@
 package sensors;
 
 
-import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorManager;
+import android.view.View;
+import android.widget.TextView;
 
-import sensordata.AccelerometerData;
+import sensordata.AccelerometerDataSet;
+import sensordata.SensorDataSet;
 
 public class AccelerometerHandler extends SensorHandler {
 
-    private AccelerometerData data;
+    private AccelerometerDataSet data;
+    private TextView xView, yView, zView;
 
     public AccelerometerHandler(SensorManager sm) {
         super();
         super.setSensorManager(sm);
         super.setSensor(sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER));
-        this.data = new AccelerometerData();
+        this.data = new AccelerometerDataSet();
     }
 
     @Override
@@ -25,7 +28,8 @@ public class AccelerometerHandler extends SensorHandler {
         float y = event.values[1];
         float z = event.values[2];
         long currTime = System.currentTimeMillis();
-        getData().addDataPoint(x, y ,z, currTime);
+        getSensorDataSet().addDataPoint(x, y, z, currTime);
+        notifyObservers(getSensorDataSet());
     }
 
     @Override
@@ -33,8 +37,24 @@ public class AccelerometerHandler extends SensorHandler {
         // do something if sensor accuracy changes
     }
 
-    public AccelerometerData getData() {
+    @Override
+    public AccelerometerDataSet getSensorDataSet() {
         return this.data;
+    }
+
+    @Override
+    public void updateScreen() {
+        AccelerometerDataSet.AccelDataPoint top = getSensorDataSet().getData().pollFirst();
+        xView.setText(String.format("X axis\t\t%f", top.getX()));
+        yView.setText(String.format("Y axis" + "\t\t%f", top.getY()));
+        zView.setText(String.format("Z axis" + "\t\t%f", top.getZ()));
+    }
+
+    @Override
+    public void setViews(View... views) {
+        this.xView = (TextView) views[0];
+        this.yView = (TextView) views[1];
+        this.zView = (TextView) views[2];
     }
 
 }
