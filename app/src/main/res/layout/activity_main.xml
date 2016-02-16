@@ -32,4 +32,14 @@
         android:layout_height="wrap_content"
         android:layout_below="@+id/yval"
         android:background="#5650b7" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/screenLog"
+        android:layout_below="@+id/zval"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentBottom="true"
+        android:layout_alignEnd="@+id/zval" />
+
 </RelativeLayout>
