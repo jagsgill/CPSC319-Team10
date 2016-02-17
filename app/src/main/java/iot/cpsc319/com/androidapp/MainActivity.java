@@ -9,32 +9,62 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
 
+import java.lang.reflect.Method;
 import java.util.Observable;
 import java.util.Observer;
 
+import mqtt.MqttPublisher;
 import sensors.AccelerometerHandler;
 import sensors.SensorHandler;
 
 // TODO check android target api (20 or 21 okay?)
-public class MainActivity extends ActionBarActivity implements Observer {
+public class MainActivity extends ActionBarActivity {
 
     private TextView screenLog;
 
     private SensorManager sensorManager;
     private SensorHandler accelHandler;
+    private String clientId;
+    private MqttPublisher mqttPublisher;
+    private int VERY_LONG_SENSOR_DELAY = 1 * 1000000; // in microseconds
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        // boilerplate setup
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // get a clientId for this device
+        this.clientId = getSerialNumber();
+
         // set up sensor handlers
         this.sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        setupSensorHandlers();
+
+        setupUserInterface();
+
+        // set up the MqttPublisher for sending data
+        this.mqttPublisher = new MqttPublisher(clientId, this);
+        setupPublisher();
+    }
+
+    private void setupPublisher(){
+        mqttPublisher.setBrokerUrl("tcp://test.mosquitto.org");
+        mqttPublisher.setBrokerPort("1883");
+        mqttPublisher.setClient();
+
+        // add all classes that generate publishable data to publisher's list of observables
+        mqttPublisher.addObservable(getAccelHandler());
+
+        // then add publisher as observer for all these data generators
+        mqttPublisher.setupObserver();
+    }
+
+    private void setupSensorHandlers(){
         this.accelHandler = new AccelerometerHandler(getSensorManager());
+    }
 
-        // set up observables for sensor value changes
-        getAccelHandler().addObserver(this);
-
+    private void setupUserInterface(){
         // send sensor UI elements to their handlers
         TextView xView = (TextView) findViewById(R.id.xval);
         TextView yView = (TextView) findViewById(R.id.yval);
@@ -75,21 +105,13 @@ public class MainActivity extends ActionBarActivity implements Observer {
         return this.accelHandler;
     }
 
-    @Override
-    public void update(Observable observable, Object data) {
-        if (observable instanceof SensorHandler){
-            ((SensorHandler) observable).updateScreen();
-        } else{
-            throw new Error("Trying to observe something that's not a SensorHandler: " + observable.getClass());
-        }
-    }
-
     protected void onResume() {
         super.onResume();
 
         // register all listeners for sensors when app resumes running
+        // use a very long sensor delay for now... to keep traffic to public test broker low!
         Sensor accel = getAccelHandler().getSensor();
-        getSensorManager().registerListener(getAccelHandler(), accel, SensorManager.SENSOR_DELAY_NORMAL);
+        getSensorManager().registerListener(getAccelHandler(), accel, VERY_LONG_SENSOR_DELAY);
     }
 
     protected void onPause() {
@@ -97,5 +119,24 @@ public class MainActivity extends ActionBarActivity implements Observer {
 
         // unregister all sensor listeners when app is paused
         getSensorManager().unregisterListener(getAccelHandler());
+    }
+
+    /**
+     * Returns the unique serial number of the device.
+     * More info at {@link 'http://developer.samsung.com/technical-doc/view.do?v=T000000103'}
+     */
+    private String getSerialNumber(){
+        String serialnum = null;
+        try {
+            Class<?> c = Class.forName("android.os.SystemProperties");
+            Method get = c.getMethod("get", String.class, String.class );
+            serialnum = (String)(   get.invoke(c, "ro.serialno", "unknown" )  );
+        }
+        catch (Exception ignored)
+        {
+            // we should not reach here
+            // there should be a serial number available for all watches used...
+        }
+        return serialnum;
     }
 }

@@ -4,9 +4,15 @@ package sensors;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorManager;
+import android.os.Handler;
+import android.os.Message;
 import android.view.View;
 import android.widget.TextView;
 
+import java.util.Timer;
+import java.util.TimerTask;
+
+import mqtt.TopicMsg;
 import sensordata.AccelerometerDataSet;
 import sensordata.SensorDataSet;
 
@@ -29,8 +35,10 @@ public class AccelerometerHandler extends SensorHandler {
         float z = event.values[2];
         long currTime = System.currentTimeMillis();
         getSensorDataSet().addDataPoint(x, y, z, currTime);
+        String topic = "hello/world";
+        String msg = "x: " + x + " y: " + y + " z: " + z;
         setChanged();
-        notifyObservers();
+        notifyObservers(new TopicMsg(topic, msg));
     }
 
     @Override
@@ -46,9 +54,11 @@ public class AccelerometerHandler extends SensorHandler {
     @Override
     public void updateScreen() {
         AccelerometerDataSet.AccelDataPoint top = getSensorDataSet().getData().pollFirst();
+        System.out.println("*** updating screen: " + top.getX() + " " + top.getY() + top.getZ());
         xView.setText(String.format("X axis\t\t%f", top.getX()));
         yView.setText(String.format("Y axis" + "\t\t%f", top.getY()));
         zView.setText(String.format("Z axis" + "\t\t%f", top.getZ()));
+        System.out.println(" *** current screen values: " + xView.getText() + " " + yView.getText());
     }
 
     @Override
