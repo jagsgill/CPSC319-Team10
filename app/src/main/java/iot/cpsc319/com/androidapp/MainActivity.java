@@ -1,6 +1,7 @@
 package iot.cpsc319.com.androidapp;
 
 import android.content.Context;
+import android.hardware.Sensor;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
@@ -81,5 +82,20 @@ public class MainActivity extends ActionBarActivity implements Observer {
         } else{
             throw new Error("Trying to observe something that's not a SensorHandler: " + observable.getClass());
         }
+    }
+
+    protected void onResume() {
+        super.onResume();
+
+        // register all listeners for sensors when app resumes running
+        Sensor accel = getAccelHandler().getSensor();
+        getSensorManager().registerListener(getAccelHandler(), accel, SensorManager.SENSOR_DELAY_NORMAL);
+    }
+
+    protected void onPause() {
+        super.onPause();
+
+        // unregister all sensor listeners when app is paused
+        getSensorManager().unregisterListener(getAccelHandler());
     }
 }
