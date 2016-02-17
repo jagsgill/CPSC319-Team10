@@ -31,7 +31,6 @@ public class AccelerometerHandler extends SensorHandler {
         getSensorDataSet().addDataPoint(x, y, z, currTime);
         setChanged();
         notifyObservers();
-        System.out.println("*** Queue size: " + getSensorDataSet().getData().size());
     }
 
     @Override
