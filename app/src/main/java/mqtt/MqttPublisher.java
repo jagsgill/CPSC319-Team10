@@ -13,6 +13,7 @@ import org.eclipse.paho.client.mqttv3.MqttAsyncClient;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.eclipse.paho.client.mqttv3.persist.MqttDefaultFilePersistence;
 
 import java.nio.charset.StandardCharsets;
@@ -37,8 +38,7 @@ import sensors.SensorHandler;
  */
 public class MqttPublisher implements MqttCallback, Observer {
 
-    private String BROKER_URL;
-    private String BROKER_PORT;
+    private String brokerUrl;
     private String clientId;
     private MqttAsyncClient client;
     private Context parentContext;
@@ -95,7 +95,7 @@ public class MqttPublisher implements MqttCallback, Observer {
         client.setCallback(this);
 
         if (client.isConnected()){
-            System.out.println("Connected to: " + getBrokerUrl() + ":" + getBrokerPort());
+            System.out.println("Connected to: " + getBrokerUrl());
         }
     }
 
@@ -147,6 +147,13 @@ public class MqttPublisher implements MqttCallback, Observer {
         toObserve.add(o);
     }
 
+    /**
+     * Publishes the message in a TopicMsg to this publisher's broker on the topic specified in
+     * the TopicMsg.
+     *
+     * @param observable is a SensorHandler
+     * @param data is a TopicMsg
+     */
     @Override
     public void update(Observable observable, Object data) {
         if (observable instanceof SensorHandler && data instanceof TopicMsg){
@@ -161,14 +168,19 @@ public class MqttPublisher implements MqttCallback, Observer {
         return client;
     }
 
-    public void setClient(){
-        if (getBrokerUrl() != null && getBrokerPort() != null){
-            String fullUrl = BROKER_URL + ":" + BROKER_PORT;
+    public void setClient(MqttAsyncClient client) {
+        this.client = client;
+    }
+
+    public void setupClient(){
+        if (getBrokerUrl() != null){
             try {
+                // We can use file or memory persistence, for now use memory since it's a bit simpler
                 // must set the app's writable directory, default is root dir. which is not writable!
-                String appCacheDir = parentContext.getCacheDir().getAbsolutePath();
-                MqttDefaultFilePersistence fp = new MqttDefaultFilePersistence(appCacheDir);
-                this.client = new MqttAsyncClient(fullUrl, getClientId(), fp);
+                //String appCacheDir = getParentContext().getCacheDir().getAbsolutePath();
+                //MqttDefaultFilePersistence fp = new MqttDefaultFilePersistence(appCacheDir);
+                MemoryPersistence mp = new MemoryPersistence();
+                setClient(new MqttAsyncClient(getBrokerUrl(), getClientId(), mp));
             } catch (MqttException e) {
                 System.out.println("Problem setting the MqttAsyncClient");
             }
@@ -182,19 +194,11 @@ public class MqttPublisher implements MqttCallback, Observer {
     }
 
     public String getBrokerUrl() {
-        return BROKER_URL;
+        return brokerUrl;
     }
 
     public void setBrokerUrl(String brokerUrl) {
-        BROKER_URL = brokerUrl;
-    }
-
-    public String getBrokerPort() {
-        return BROKER_PORT;
-    }
-
-    public void setBrokerPort(String brokerPort) {
-        BROKER_PORT = brokerPort;
+        this.brokerUrl = brokerUrl;
     }
 
     public View getView() {
@@ -204,6 +208,10 @@ public class MqttPublisher implements MqttCallback, Observer {
     public void setView(TextView v) {
         this.view = v;
         view.setMovementMethod(new ScrollingMovementMethod());
+    }
+
+    public Context getParentContext() {
+        return parentContext;
     }
 
     public void updateScreen(String msg){

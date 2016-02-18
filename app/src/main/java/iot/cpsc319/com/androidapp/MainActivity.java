@@ -10,8 +10,6 @@ import android.view.MenuItem;
 import android.widget.TextView;
 
 import java.lang.reflect.Method;
-import java.util.Observable;
-import java.util.Observer;
 
 import mqtt.MqttPublisher;
 import sensors.AccelerometerHandler;
@@ -48,9 +46,8 @@ public class MainActivity extends ActionBarActivity {
     }
 
     private void setupPublisher(){
-        mqttPublisher.setBrokerUrl("tcp://test.mosquitto.org");
-        mqttPublisher.setBrokerPort("1883");
-        mqttPublisher.setClient();
+        mqttPublisher.setBrokerUrl("tcp://test.mosquitto.org:1883");
+        mqttPublisher.setupClient();
 
         // add all classes that generate publishable data to publisher's list of observables
         mqttPublisher.addObservable(getAccelHandler());
