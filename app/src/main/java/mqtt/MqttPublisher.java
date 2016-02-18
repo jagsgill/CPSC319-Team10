@@ -3,22 +3,17 @@ package mqtt;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.os.Handler;
-import android.os.Message;
 import android.text.method.ScrollingMovementMethod;
 import android.view.View;
-import android.widget.ScrollView;
 import android.widget.TextView;
 
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.IMqttToken;
 import org.eclipse.paho.client.mqttv3.MqttAsyncClient;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
-import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.persist.MqttDefaultFilePersistence;
-import org.w3c.dom.Text;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -27,9 +22,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
-import java.util.PriorityQueue;
-import java.util.Timer;
-import java.util.TimerTask;
 
 import sensors.SensorHandler;
 
@@ -50,7 +42,8 @@ public class MqttPublisher implements MqttCallback, Observer {
     private String clientId;
     private MqttAsyncClient client;
     private Context parentContext;
-    private Deque<String> log = new LinkedList<>();
+    private Deque<String> msqQueue = new LinkedList<>();
+    private String log = "";
 
     private List<Observable> toObserve = new ArrayList<>(); // sensor handler classes are added here
     private TextView view;
@@ -214,20 +207,26 @@ public class MqttPublisher implements MqttCallback, Observer {
     }
 
     public void updateScreen(String msg){
-        String newLog = updateLog(msg);
-        view.setText(newLog);
+        // update the log, then send tell the UI thread to update the screen
+        updateLog(msg);
+        view.post(new Runnable() {
+            @Override
+            public void run() {
+                view.setText(log);
+            }
+        });
     }
 
-    private String updateLog(String msg){
-        if (log.size() > 6) {
-            log.pollFirst();
+    private void updateLog(String msg){
+        if (msqQueue.size() > 6) {
+            msqQueue.pollFirst();
         }
-        log.add(msg);
+        msqQueue.add(msg);
         String newLog = "";
-        for (String s : this.log){
+        for (String s : this.msqQueue){
             newLog += s;
         }
-        return newLog;
+        this.log = newLog;
     }
 }
 
