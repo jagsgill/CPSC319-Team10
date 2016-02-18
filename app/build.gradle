@@ -2,7 +2,7 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 21
-    buildToolsVersion "21.1.2"
+    buildToolsVersion '23.0.2'
     packagingOptions {
         exclude 'META-INF/ECLIPSE_.SF'
         exclude 'META-INF/ECLIPSE_.RSA'
@@ -13,6 +13,7 @@ android {
         targetSdkVersion 21
         versionCode 1
         versionName "1.0"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
         release {
@@ -24,8 +25,32 @@ android {
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
-    testCompile 'junit:junit:4.12'
     compile 'com.android.support:appcompat-v7:21.0.3'
     compile files('libs/org.eclipse.paho.android.service-1.0.2.jar')
     compile files('libs/org.eclipse.paho.client.mqttv3-1.0.2.jar')
+
+    /*
+
+    Note: we have a dependency issue here because we are using old APKs: test:runner and test:rules
+          depend on support-annotations 23.0.1 but we can't use this since our APK level is below 23.
+          So we have to exclude that module for the runner as described here:
+          http://stackoverflow.com/questions/28999124/resolved-versions-for-app-22-0-0-and-test-app-21-0-3-differ
+
+    +--- com.android.support:support-annotations:21.0.3 -> 23.0.1
+    +--- com.android.support.test:runner:0.4.1
+    |    +--- com.android.support.test:exposed-instrumentation-api-publish:0.4.1
+    |    +--- com.android.support:support-annotations:23.0.1
+    |    \--- junit:junit:4.12
+    |         \--- org.hamcrest:hamcrest-core:1.3
+    \--- com.android.support.test:rules:0.4.1
+         \--- com.android.support.test:runner:0.4.1 (*)
+     */
+
+    androidTestCompile 'com.android.support:support-annotations:21.0.3'
+    androidTestCompile ('com.android.support.test:runner:0.4.1') {
+        exclude group: 'com.android.support', module: 'support-annotations'
+    }
+    androidTestCompile ('com.android.support.test:rules:0.4.1') {
+        exclude group: 'com.android.support', module: 'support-annotations'
+    }
 }
