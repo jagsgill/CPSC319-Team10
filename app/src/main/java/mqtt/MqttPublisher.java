@@ -5,7 +5,10 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Handler;
 import android.os.Message;
+import android.text.method.ScrollingMovementMethod;
 import android.view.View;
+import android.widget.ScrollView;
+import android.widget.TextView;
 
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.IMqttToken;
@@ -15,9 +18,12 @@ import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.persist.MqttDefaultFilePersistence;
+import org.w3c.dom.Text;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Deque;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
@@ -44,9 +50,10 @@ public class MqttPublisher implements MqttCallback, Observer {
     private String clientId;
     private MqttAsyncClient client;
     private Context parentContext;
+    private Deque<String> log = new LinkedList<>();
 
     private List<Observable> toObserve = new ArrayList<>(); // sensor handler classes are added here
-    private View view;
+    private TextView view;
 
     public MqttPublisher(String clientId, Context parentContext){
         this.clientId = clientId;
@@ -68,6 +75,8 @@ public class MqttPublisher implements MqttCallback, Observer {
                 IMqttToken sendToken = client.publish(topic, msg);
                 sendToken.waitForCompletion();
                 System.out.println("Sending message: " + new String(msg.getPayload(), StandardCharsets.UTF_8));
+                updateScreen("Sending msg:\n");
+                updateScreen("    " + _msg +"\n");
             } catch (MqttException e) {
                 System.out.println("Error while sending msg: " + e.getMessage().toString());
                 // e.printStackTrace();
@@ -123,6 +132,7 @@ public class MqttPublisher implements MqttCallback, Observer {
             msg = token.getMessage();
             if (msg == null){
                 System.out.println("Message delivered.");
+                updateScreen("    Successfully delivered.\n");
             } else {
                 System.out.println("Delivering message: " + msg.toString());
             }
@@ -198,8 +208,26 @@ public class MqttPublisher implements MqttCallback, Observer {
         return view;
     }
 
-    public void setView(View v) {
+    public void setView(TextView v) {
         this.view = v;
+        view.setMovementMethod(new ScrollingMovementMethod());
+    }
+
+    public void updateScreen(String msg){
+        String newLog = updateLog(msg);
+        view.setText(newLog);
+    }
+
+    private String updateLog(String msg){
+        if (log.size() > 6) {
+            log.pollFirst();
+        }
+        log.add(msg);
+        String newLog = "";
+        for (String s : this.log){
+            newLog += s;
+        }
+        return newLog;
     }
 }
 

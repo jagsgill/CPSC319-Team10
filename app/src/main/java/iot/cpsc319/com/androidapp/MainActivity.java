@@ -20,8 +20,6 @@ import sensors.SensorHandler;
 // TODO check android target api (20 or 21 okay?)
 public class MainActivity extends ActionBarActivity {
 
-    private TextView screenLog;
-
     private SensorManager sensorManager;
     private SensorHandler accelHandler;
     private String clientId;
@@ -37,14 +35,15 @@ public class MainActivity extends ActionBarActivity {
         // get a clientId for this device
         this.clientId = getSerialNumber();
 
-        // set up sensor handlers
         this.sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        this.mqttPublisher = new MqttPublisher(clientId, this);
+
+        // set up sensor handlers
         setupSensorHandlers();
 
         setupUserInterface();
 
         // set up the MqttPublisher for sending data
-        this.mqttPublisher = new MqttPublisher(clientId, this);
         setupPublisher();
     }
 
@@ -72,7 +71,8 @@ public class MainActivity extends ActionBarActivity {
         getAccelHandler().setViews(xView, yView, zView);
 
         // mqtt UI elements
-        this.screenLog = (TextView) findViewById(R.id.screenLog);
+        TextView screenLog = (TextView) findViewById(R.id.screenLog);
+        this.mqttPublisher.setView(screenLog);
     }
 
     @Override
