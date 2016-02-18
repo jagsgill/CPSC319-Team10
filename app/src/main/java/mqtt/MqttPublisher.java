@@ -44,6 +44,7 @@ public class MqttPublisher implements MqttCallback, Observer {
     private Context parentContext;
     private Deque<String> msqQueue = new LinkedList<>();
     private String log = "";
+    public int msgCount = 0;
 
     private List<Observable> toObserve = new ArrayList<>(); // sensor handler classes are added here
     private TextView view;
@@ -68,10 +69,9 @@ public class MqttPublisher implements MqttCallback, Observer {
                 IMqttToken sendToken = client.publish(topic, msg);
                 sendToken.waitForCompletion();
                 System.out.println("Sending message: " + new String(msg.getPayload(), StandardCharsets.UTF_8));
-                updateScreen("Sending msg:\n");
-                updateScreen("    " + _msg +"\n");
+                updateScreen(String.format("Sending msg %d:\n    %s\n", ++msgCount, _msg));
             } catch (MqttException e) {
-                System.out.println("Error while sending msg: " + e.getMessage().toString());
+                System.out.println("Error while sending msg: " + e.getMessage());
                 // e.printStackTrace();
             } finally {
                 stopConnection();
