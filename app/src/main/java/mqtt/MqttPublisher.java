@@ -7,12 +7,15 @@ import android.text.method.ScrollingMovementMethod;
 import android.view.View;
 import android.widget.TextView;
 
+import org.eclipse.paho.client.mqttv3.IMqttActionListener;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.IMqttToken;
 import org.eclipse.paho.client.mqttv3.MqttAsyncClient;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
+import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.eclipse.paho.client.mqttv3.internal.ConnectActionListener;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.eclipse.paho.client.mqttv3.persist.MqttDefaultFilePersistence;
 
@@ -42,6 +45,7 @@ public class MqttPublisher implements MqttCallback, Observer {
     private String clientId;
     private MqttAsyncClient client;
     private Context parentContext;
+    private MqttConnectOptions connectOptions;
     private Deque<String> msqQueue = new LinkedList<>();
     private String log = "";
     public int msgCount = 0;
@@ -52,6 +56,8 @@ public class MqttPublisher implements MqttCallback, Observer {
     public MqttPublisher(String clientId, Context parentContext){
         this.clientId = clientId;
         this.parentContext = parentContext;
+        this.connectOptions = new MqttConnectOptions();
+        setConnectOptions(getConnectOptions());
     }
 
     public void publish(TopicMsg tm){
@@ -83,20 +89,19 @@ public class MqttPublisher implements MqttCallback, Observer {
     }
 
     public void startConnection(){
-
+        IMqttToken connectToken = null;
         try {
-            IMqttToken connectToken = client.connect();
+            connectToken = client.connect(getConnectOptions());
             connectToken.waitForCompletion();
         } catch (MqttException e) {
-            System.out.println("Problem connecting. Retrying...");
+            System.out.println("Problem connecting.");
+            if (connectToken != null){
+                System.out.println(connectToken.getResponse());
+            }
             // for now, do nothing useful if we can't connect
         }
 
         client.setCallback(this);
-
-        if (client.isConnected()){
-            System.out.println("Connected to: " + getBrokerUrl());
-        }
     }
 
     public void stopConnection(){
@@ -199,6 +204,15 @@ public class MqttPublisher implements MqttCallback, Observer {
 
     public void setBrokerUrl(String brokerUrl) {
         this.brokerUrl = brokerUrl;
+    }
+
+    public MqttConnectOptions getConnectOptions() {
+        return connectOptions;
+    }
+
+    public void setConnectOptions(MqttConnectOptions connectOptions) {
+        connectOptions.setUserName("ehcxlgcl");
+        connectOptions.setPassword("AQsUmTw6wYee".toCharArray());
     }
 
     public View getView() {

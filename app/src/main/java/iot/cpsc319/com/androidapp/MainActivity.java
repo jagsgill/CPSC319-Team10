@@ -46,7 +46,7 @@ public class MainActivity extends ActionBarActivity {
     }
 
     private void setupPublisher(){
-        mqttPublisher.setBrokerUrl("tcp://test.mosquitto.org:1883");
+        mqttPublisher.setBrokerUrl("tcp://m10.cloudmqtt.com:10975");
         mqttPublisher.setupClient();
 
         // add all classes that generate publishable data to publisher's list of observables
