@@ -60,6 +60,7 @@ public class MqttPublisher implements MqttCallback, Observer {
     }
 
     public void publish(TopicMsg tm){
+        // TODO: app freezes at startup if no wifi
         // make sure we're connected to the internet
         ConnectivityManager connMgr = (ConnectivityManager)
                 parentContext.getSystemService(Context.CONNECTIVITY_SERVICE);
