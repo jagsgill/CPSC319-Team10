@@ -7,7 +7,6 @@ import android.text.method.ScrollingMovementMethod;
 import android.view.View;
 import android.widget.TextView;
 
-import org.eclipse.paho.client.mqttv3.IMqttActionListener;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.IMqttToken;
 import org.eclipse.paho.client.mqttv3.MqttAsyncClient;
@@ -15,9 +14,7 @@ import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
-import org.eclipse.paho.client.mqttv3.internal.ConnectActionListener;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
-import org.eclipse.paho.client.mqttv3.persist.MqttDefaultFilePersistence;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -27,6 +24,7 @@ import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
 
+import location.LocationHandler;
 import sensors.SensorHandler;
 
 /**
@@ -164,6 +162,9 @@ public class MqttPublisher implements MqttCallback, Observer {
     public void update(Observable observable, Object data) {
         if (observable instanceof SensorHandler && data instanceof TopicMsg){
             ((SensorHandler) observable).updateScreen();
+            publish((TopicMsg) data);
+        } else if (observable instanceof LocationHandler && data instanceof TopicMsg){
+            ((LocationHandler) observable).updateScreen();
             publish((TopicMsg) data);
         } else {
             throw new Error("Tried to publish incorrect data type: " + data.getClass());

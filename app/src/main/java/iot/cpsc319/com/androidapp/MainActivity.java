@@ -3,6 +3,7 @@ package iot.cpsc319.com.androidapp;
 import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
@@ -11,6 +12,7 @@ import android.widget.TextView;
 
 import java.lang.reflect.Method;
 
+import location.LocationHandler;
 import mqtt.MqttPublisher;
 import sensors.AccelerometerHandler;
 import sensors.SensorHandler;
@@ -20,9 +22,12 @@ public class MainActivity extends ActionBarActivity {
 
     private SensorManager sensorManager;
     private SensorHandler accelHandler;
+
     private String clientId;
     private MqttPublisher mqttPublisher;
     private int VERY_LONG_SENSOR_DELAY = 1 * 1000000; // in microseconds
+    private LocationManager locationManager;
+    private LocationHandler locationHandler;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,15 +39,18 @@ public class MainActivity extends ActionBarActivity {
         this.clientId = getSerialNumber();
 
         this.sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        this.locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         this.mqttPublisher = new MqttPublisher(clientId, this);
 
         // set up sensor handlers
         setupSensorHandlers();
-
+        setupLocationHandler();
         setupUserInterface();
 
         // set up the MqttPublisher for sending data
         setupPublisher();
+
+
     }
 
     private void setupPublisher(){
@@ -51,6 +59,7 @@ public class MainActivity extends ActionBarActivity {
 
         // add all classes that generate publishable data to publisher's list of observables
         mqttPublisher.addObservable(getAccelHandler());
+        mqttPublisher.addObservable(getLocationHandler());
 
         // then add publisher as observer for all these data generators
         mqttPublisher.setupObserver();
@@ -60,6 +69,10 @@ public class MainActivity extends ActionBarActivity {
         this.accelHandler = new AccelerometerHandler(getSensorManager());
     }
 
+    private void setupLocationHandler(){
+        this.locationHandler = new LocationHandler();
+    }
+
     private void setupUserInterface(){
         // send sensor UI elements to their handlers
         TextView xView = (TextView) findViewById(R.id.xval);
@@ -67,6 +80,9 @@ public class MainActivity extends ActionBarActivity {
         TextView zView = (TextView) findViewById(R.id.zval);
         getAccelHandler().setViews(xView, yView, zView);
 
+        TextView lat = (TextView) findViewById(R.id.lat);
+        TextView lng = (TextView) findViewById(R.id.lng);
+        getLocationHandler().setViews(lat, lng);
         // mqtt UI elements
         TextView screenLog = (TextView) findViewById(R.id.screenLog);
         this.mqttPublisher.setView(screenLog);
@@ -97,9 +113,15 @@ public class MainActivity extends ActionBarActivity {
     public SensorManager getSensorManager() {
         return this.sensorManager;
     }
+    public LocationManager getLocationManager() {
+        return this.locationManager;
+    }
 
     public SensorHandler getAccelHandler(){
         return this.accelHandler;
+    }
+    public LocationHandler getLocationHandler() {
+        return this.locationHandler;
     }
 
     protected void onResume() {
@@ -109,6 +131,7 @@ public class MainActivity extends ActionBarActivity {
         // use a very long sensor delay for now... to keep traffic to public test broker low!
         Sensor accel = getAccelHandler().getSensor();
         getSensorManager().registerListener(getAccelHandler(), accel, VERY_LONG_SENSOR_DELAY);
+        getLocationManager().requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationHandler);
     }
 
     protected void onPause() {
@@ -116,6 +139,7 @@ public class MainActivity extends ActionBarActivity {
 
         // unregister all sensor listeners when app is paused
         getSensorManager().unregisterListener(getAccelHandler());
+        getLocationManager().removeUpdates(locationHandler);
     }
 
     /**
