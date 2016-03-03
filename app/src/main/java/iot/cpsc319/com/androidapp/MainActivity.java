@@ -54,7 +54,10 @@ public class MainActivity extends ActionBarActivity {
     }
 
     private void setupPublisher(){
-        mqttPublisher.setBrokerUrl("tcp://m10.cloudmqtt.com:10975");
+        // Our own brokers:
+        // unencrypted: tcp://130.211.153.252:1883
+        // encrypted: tcp://130.211.153.252:8883
+        mqttPublisher.setBrokerUrl("tcp://130.211.153.252:1883");
         mqttPublisher.setupClient();
 
         // add all classes that generate publishable data to publisher's list of observables
