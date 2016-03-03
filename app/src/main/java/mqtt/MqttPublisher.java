@@ -39,6 +39,7 @@ import sensors.SensorHandler;
  * Starting and closing the connection are handled at the time of publishing data
  *
  */
+// TODO: app freezes if wifi is lost after it starts
 public class MqttPublisher implements MqttCallback, Observer {
 
     private String brokerUrl;
