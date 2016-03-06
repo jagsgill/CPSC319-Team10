@@ -39,33 +39,7 @@ class Sessions:
         retString = (retString[:-1]) + "]"
         return retString
 
-    # def makeJSONString(self):
-    #     retString = "\"sessions\": ["
-    #     for s in self.sessions:
-    #         retString += str(s) + ","
-    #     retString = (retString[:-1]) + "]"
-    #     return retString
-    #
-    # def getJSON(self):
-    #     return json.dumps(self.makeJSONString())
-    #
-    # def addSession(self,session):
-    #     self.sessions.append(session)
-    #
-    # def encodeSessions(self):
-    #     sess = self.sessions[0]
-    #     return sess
 
-# class MyEncoderSession(json.JSONEncoder):
-#     def default(self, obj):
-#         if not isinstance(obj, Session):
-#             return super(MyEncoderSession, self).default(obj)
-#
-#         return obj.__dict__
-
-    #def encodeSessions(self):
-    #    retMe = "sessions" : [
-     #   for s in self.sessions:
 # test
 #ses = Session(9,1,2,3,100,200)
 #ses2 = Session(9,1,0,13,500,300)

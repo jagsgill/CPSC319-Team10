@@ -1,11 +1,8 @@
 from pymongo import MongoClient
 from Session import Sessions
 from Session import Session
-from AccelerometerPayload import AccelerometerPayload
-from Location import Location
 from Device import Device
 import json
-import pymongo
 
 class DataManager(json.JSONEncoder):
 
@@ -19,39 +16,7 @@ class DataManager(json.JSONEncoder):
         db.devices.insert_one(deserializedDev)
         connection.close()
 
-
-
-    # def insertDevice(self, device):
-    #     connection = MongoClient('localhost:27017')#'mongodb://192.168.1.65:27017')
-    #     db = connection.vandrico
-    #     sessions = device.getSessions()
-    #     sesx = Session("2014-12-17T21:11:24.148Z",10,20,30,1.1,2.2)
-    #     sesx2 = json.dumps(sesx.__dict__)
-    #     sesx3 = json.loads(sesx2)
-    #     sessions.append(sesx3)
-        #print(sessions)
-        # sessions.addSession({
-        #                         "timestamp" : "2014-12-17T21:11:24.148Z",
-        #                         "accelerometer_payload" : {
-        #                                 "x" : 0.229,
-        #                                 "y" : 0.571,
-        #                                 "z" : 9.009
-        #                         },
-        #                         "location" : {
-        #                                 "latitude" : 22222,
-        #                                 "longitude" : 11111
-        #                         }
-        #                 })
-        #device.setSessions(sessions)
-        #print(sessions)
-
-        #json = sessions.encodeSessions()
-        #m = {'id': 2, 'name': 'hussain'}
-        # n = json.dumps(device.__dict__)#m)
-        # o = json.loads(n)
-
-
-    # Returns device with matching id
+    # Returns an array of records matching the device ID
     def selectDevicesFromDb(self, devID):
         connection = MongoClient('localhost:27017')#'mongodb://192.168.1.65:27017')
         db = connection.vandrico
@@ -63,7 +28,7 @@ class DataManager(json.JSONEncoder):
         connection.close()
         return devices
 
-    # Returns true if device id is in database
+    # Returns true if device ID is in database
     def devInDb(self, devID):
         return self.selectDevicesFromDb(devID) is not None
 
@@ -75,16 +40,14 @@ class DataManager(json.JSONEncoder):
         print()
         print('+-+-+-+-+-+-+-+-+-+-+-+-+-+-')
         for record in results:
-            print("Device ID: " + str(record['device_id']))
-            for subRecord in record['sessions']:
-                print("TimeStamp: " + str(subRecord['timestamp']))
-                print("x: " + str(subRecord['accelerometer_payload']['x']))
-                print("y: " + str(subRecord['accelerometer_payload']['y']))
-                print("z: " + str(subRecord['accelerometer_payload']['z']))
-                print("Latitude: " + str(subRecord['location']['latitude']))
-                print("Longitude: " + str(subRecord['location']['longitude']))
+            print("Device ID: " + str(record['deviceID']))
+            print("TimeStamp: " + str(record['timestamp']))
+            print("x: " + str(record['x']))
+            print("y: " + str(record['y']))
+            print("z: " + str(record['z']))
+            print("Latitude: " + str(record['latitude']))
+            print("Longitude: " + str(record['longitude']))
             print('+-+-+-+-+-+-+-+-+-+-+-+-+-+-')
-
         print()
         connection.close()
 
@@ -128,19 +91,7 @@ class DataManager(json.JSONEncoder):
         return retStr
 
 #The following two lines are for testing
-#dm = DataManager()
-#dm.printAllData()
-#dvID = 1234
-#dev = dm.selectDeviceFromDb(dvID)
-#print(dev)
-
-#print(dm.devInDb(dvID))
-# ses = Session("2014-12-17T21:11:24.148Z",10,20,30,1.1,2.2)
-# ses2 = Session("2014-12-17T21:11:24.145Z",15,10,40,7.1,6.2)
-# los = Sessions([ses, ses2])
-#dev = Device(6666, ses)
-#dev2 = Device(1236,los)
-#devs = Devices([dev,dev2])
 dm = DataManager()
+dm.printAllData()
 dm.formatDataForWebApp()
 #dm.insertDeviceData(123456,"2014-12-17T21:11:24.148Z",1.98877,2.222,3.444,6.99,7.64)

@@ -5,26 +5,6 @@ from Location import Location
 import json
 
 class Device:
-    # def __init__(self, devid, sess):
-    #     self.deviceID = devid
-    #     #self.sessions = sess
-    #     self.session = sess
-
-    # def __str__(self):
-    #     loc = Location(self.latitude,self.longitude)
-    #     accPyld = AccelerometerPayload(self.x,self.y,self.z)
-    #     ses =
-    #     return "{\"device_id\": " + str(self.deviceID) + "," + str(self.session) + "}"
-
-    # def getDevID(self):
-    #     return self.deviceID
-    #
-    # def getSessions(self):
-    #     return self.session
-    #
-    # def setSessions(self, sess):
-    #     self.session = sess
-
     def __init__(self, devId, time,x,y,z,lat,long):
         self.deviceID = devId
         self.timestamp = time
