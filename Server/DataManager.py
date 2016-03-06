@@ -3,6 +3,7 @@ from Session import Sessions
 from Session import Session
 from Device import Device
 import json
+import math
 
 class DataManager(json.JSONEncoder):
 
@@ -64,6 +65,34 @@ class DataManager(json.JSONEncoder):
         connection.close()
         return ids
 
+    def formatDataForWebAppSimple(self):
+        ids = self.findUniqueIds()
+        connection = MongoClient('localhost:27017')#'mongodb://192.168.1.65:27017')
+        db = connection.vandrico
+        retString = "["
+        for id in ids:
+            records = self.selectDevicesFromDb(id)
+            for device in records:
+                retString += self.getDeviceAsJSONSimple(device)
+                retString += ","
+        connection.close()
+        retString = retString[:-1]
+        retString += "]"
+        print(retString)
+        return retString
+
+    def getDeviceAsJSONSimple(self,device):
+        retStr = "{\"deviceID\": " + str(device.getDeviceId()) + \
+                 ",\"timestamp\":" + str(device.getTimestamp()) \
+                 + ",\"x\":" + str(device.getX())\
+                 + ",\"y\":" + str(device.getY())\
+                 + ",\"z\":" + str(device.getZ())\
+                 + ",\"latitude\":" + str(device.getLatitude())\
+                 + ",\"longitude\":" + str(device.getLongitude())\
+                 + ",\"acceleration\":" + str(dm.calculateAccleration(device.getX(),device.getY(),device.getZ()))+ "}"
+        print(retStr)
+        return retStr
+
     # Returns a JSON string
     def formatDataForWebApp(self):
         ids = self.findUniqueIds()
@@ -90,8 +119,13 @@ class DataManager(json.JSONEncoder):
         print(retStr)
         return retStr
 
+    def calculateAccleration(self,x,y,z):
+        var = float(x)*float(x)+float(y)*float(y)+float(z)*float(z)
+        return math.sqrt(var)
+
 #The following two lines are for testing
 dm = DataManager()
 dm.printAllData()
-dm.formatDataForWebApp()
+dm.formatDataForWebAppSimple()
+print(str(dm.calculateAccleration(1,2,3)))
 #dm.insertDeviceData(123456,"2014-12-17T21:11:24.148Z",1.98877,2.222,3.444,6.99,7.64)
