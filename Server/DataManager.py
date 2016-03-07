@@ -22,7 +22,7 @@ class DataManager(json.JSONEncoder):
         connection = MongoClient('localhost:27017')#'mongodb://192.168.1.65:27017')
         db = connection.vandrico
         devices = []
-        for doc in db.devices.find({"deviceID":devID}):
+        for doc in db.devices.find({"deviceID":devID}).sort("timestamp",1):
             dev = Device(str(doc['deviceID']),str(doc['timestamp']),str(doc['x']),str(doc['y']),
                          str(doc['z']),str(doc['latitude']),str(doc['longitude']))
             devices.append(dev)
