@@ -1,6 +1,7 @@
 package iot.cpsc319.com.androidapp;
 
 import android.content.Context;
+import android.content.Intent;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
 import android.location.LocationManager;
@@ -53,7 +54,7 @@ public class MainActivity extends ActionBarActivity {
 
     }
 
-    private void setupPublisher(){
+    private void setupPublisher() {
         // Our own brokers:
         // unencrypted: tcp://130.211.153.252:1883
         // encrypted: tcp://130.211.153.252:8883
@@ -68,15 +69,15 @@ public class MainActivity extends ActionBarActivity {
         mqttPublisher.setupObserver();
     }
 
-    private void setupSensorHandlers(){
+    private void setupSensorHandlers() {
         this.accelHandler = new AccelerometerHandler(getSensorManager());
     }
 
-    private void setupLocationHandler(){
+    private void setupLocationHandler() {
         this.locationHandler = new LocationHandler();
     }
 
-    private void setupUserInterface(){
+    private void setupUserInterface() {
         // send sensor UI elements to their handlers
         TextView xView = (TextView) findViewById(R.id.xval);
         TextView yView = (TextView) findViewById(R.id.yval);
@@ -104,25 +105,29 @@ public class MainActivity extends ActionBarActivity {
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
+        switch (id) {
+            case R.id.preference_settings:
+                Intent intent = new Intent();
+                intent.setClassName(this, "iot.cpsc319.com.androidapp.UserPreferenceActivity");
+                startActivity(intent);
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
         }
-
-        return super.onOptionsItemSelected(item);
     }
 
     public SensorManager getSensorManager() {
         return this.sensorManager;
     }
+
     public LocationManager getLocationManager() {
         return this.locationManager;
     }
 
-    public SensorHandler getAccelHandler(){
+    public SensorHandler getAccelHandler() {
         return this.accelHandler;
     }
+
     public LocationHandler getLocationHandler() {
         return this.locationHandler;
     }
@@ -149,15 +154,13 @@ public class MainActivity extends ActionBarActivity {
      * Returns the unique serial number of the device.
      * More info at {@link 'http://developer.samsung.com/technical-doc/view.do?v=T000000103'}
      */
-    private String getSerialNumber(){
+    private String getSerialNumber() {
         String serialnum = null;
         try {
             Class<?> c = Class.forName("android.os.SystemProperties");
-            Method get = c.getMethod("get", String.class, String.class );
-            serialnum = (String)(   get.invoke(c, "ro.serialno", "unknown" )  );
-        }
-        catch (Exception ignored)
-        {
+            Method get = c.getMethod("get", String.class, String.class);
+            serialnum = (String) (get.invoke(c, "ro.serialno", "unknown"));
+        } catch (Exception ignored) {
             // we should not reach here
             // there should be a serial number available for all watches used...
         }
