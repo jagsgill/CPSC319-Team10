@@ -3,6 +3,7 @@ package location;
 import android.location.Location;
 import android.location.LocationListener;
 import android.os.Bundle;
+import android.util.Pair;
 import android.view.View;
 import android.widget.TextView;
 
@@ -19,16 +20,13 @@ public class LocationHandler extends Observable implements LocationListener {
     private double lat;
     private double lng;
 
-
-
     @Override
     public void onLocationChanged(Location location) {
         this.location = location;
         lat = location.getLatitude();
         lng = location.getLongitude();
         setChanged();
-
-        notifyObservers(new TopicMsg("Location", lat + " " + lng));
+        notifyObservers(new Pair<>(lat, lng));
     }
 
     @Override
@@ -43,31 +41,6 @@ public class LocationHandler extends Observable implements LocationListener {
 
     @Override
     public void onProviderDisabled(String provider) {
-
-    }
-
-    public void updateScreen() {
-        // send a UI update requests to the UI thread
-        System.out.println("*** updating location: " + lat + " " + lng);
-        latView.post(new Runnable() {
-            @Override
-            public void run() {
-                latView.setText(String.format("lat\t\t%f", lat));
-            }
-        });
-
-        longView.post(new Runnable() {
-            @Override
-            public void run() {
-                longView.setText(String.format("lng\t\t%f", lng));
-            }
-        });
-
-    }
-
-    public void setViews(View... views) {
-        this.latView = (TextView) views[0];
-        this.longView = (TextView) views[1];
 
     }
 }

@@ -12,12 +12,8 @@ import sensordata.SensorDataSet;
 
 public abstract class SensorHandler extends Observable implements SensorEventListener {
 
-    private SensorManager sensorManager;
-    private Sensor sensor;
-
-    public SensorManager getSensorManager() {
-        return sensorManager;
-    }
+    protected SensorManager sensorManager;
+    protected Sensor sensor;
 
     public void setSensorManager(SensorManager sensorManager) {
         this.sensorManager = sensorManager;
@@ -27,13 +23,7 @@ public abstract class SensorHandler extends Observable implements SensorEventLis
         this.sensor = sensor;
     }
 
-    public Sensor getSensor() {
-        return sensor;
-    }
+    public abstract void start();
 
-    public abstract void updateScreen();
-
-    public abstract void setViews(View... views);
-
-    public abstract SensorDataSet getSensorDataSet();
+    public abstract void stop();
 }

@@ -4,33 +4,19 @@ package sensors;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorManager;
-import android.os.Handler;
-import android.os.Message;
-import android.view.View;
-import android.widget.TextView;
 
-import java.util.Timer;
-import java.util.TimerTask;
-
-import mqtt.TopicMsg;
 import sensordata.AccelerometerDataSet;
-import sensordata.SensorDataSet;
 
 public class AccelerometerHandler extends SensorHandler {
+    private float sensitivity; // in m/(s^2)
+    private long lastStepTime = 0;
+    private final int StepMinInterval = 300; // in milliseconds
 
-    private AccelerometerDataSet data;
-    private TextView xView, yView, zView;
-
-    // hold "current" values we can send to the UI thread for updating on the screen
-    float currX;
-    float currY;
-    float currZ;
-
-    public AccelerometerHandler(SensorManager sm) {
+    public AccelerometerHandler(SensorManager sm, float sensitivity) {
         super();
         super.setSensorManager(sm);
         super.setSensor(sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER));
-        this.data = new AccelerometerDataSet();
+        this.sensitivity = sensitivity;
     }
 
     @Override
@@ -38,12 +24,18 @@ public class AccelerometerHandler extends SensorHandler {
         float x = event.values[0];
         float y = event.values[1];
         float z = event.values[2];
-        long currTime = System.currentTimeMillis();
-        getSensorDataSet().addDataPoint(x, y, z, currTime);
-        String topic = "hello/world";
-        String msg = "x: " + x + " y: " + y + " z: " + z;
+        long currTime = System.currentTimeMillis(); // !!!
+        boolean isStep = false;
+        if (currTime - lastStepTime > StepMinInterval) {
+            double net = Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2) + Math.pow(z, 2));
+            isStep = net > sensitivity;
+            if (isStep)
+                lastStepTime = currTime;
+        }
         setChanged();
-        notifyObservers(new TopicMsg(topic, msg));
+        AccelerometerDataSet.AccelDataPoint data =
+                new AccelerometerDataSet.AccelDataPoint(x, y, z, currTime, isStep);
+        notifyObservers(data);
     }
 
     @Override
@@ -52,46 +44,18 @@ public class AccelerometerHandler extends SensorHandler {
     }
 
     @Override
-    public AccelerometerDataSet getSensorDataSet() {
-        return this.data;
+    public void start() {
+        sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_NORMAL);
+        lastStepTime = System.currentTimeMillis();
     }
 
     @Override
-    public void updateScreen() {
-        AccelerometerDataSet.AccelDataPoint top = getSensorDataSet().getData().pollFirst();
-        currX = top.getX();
-        currY = top.getY();
-        currZ = top.getZ();
-
-        // send a UI update requests to the UI thread
-        System.out.println("*** updating screen: " + currX + " " + currY + currZ);
-        xView.post(new Runnable() {
-            @Override
-            public void run() {
-                xView.setText(String.format("X axis\t\t%f", currX));
-            }
-        });
-
-        yView.post(new Runnable() {
-            @Override
-            public void run() {
-                yView.setText(String.format("Y axis\t\t%f", currY));
-            }
-        });
-
-        zView.post(new Runnable() {
-            @Override
-            public void run() {
-                zView.setText(String.format("Z axis\t\t%f", currZ));
-            }
-        });
+    public void stop() {
+        sensorManager.unregisterListener(this);
     }
 
-    @Override
-    public void setViews(View... views) {
-        this.xView = (TextView) views[0];
-        this.yView = (TextView) views[1];
-        this.zView = (TextView) views[2];
+    public void setSensitivity(float f) {
+        sensitivity = f;
     }
 
 }

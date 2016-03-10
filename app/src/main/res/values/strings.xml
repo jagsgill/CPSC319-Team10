@@ -1,4 +1,13 @@
 <resources>
-    <string name="app_name">AndroidApp</string>
+    <string name="app_name">Some App</string>
     <string name="action_settings">Settings</string>
+    <string name="button_start">START</string>
+    <string name="button_stop">STOP</string>
+    <string name="title_activity_setting">SettingActivity</string>
+
+    <string name="saved_upload_rate">iot.cpsc319.com.androidapp.SAVED_UPLOAD_RATE</string>
+    <string name="saved_sensitivity">iot.cpsc319.com.androidapp.SAVED_SENSITIVITY</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

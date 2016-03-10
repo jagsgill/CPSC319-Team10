@@ -4,6 +4,7 @@ import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.text.method.ScrollingMovementMethod;
+import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 
@@ -17,15 +18,8 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Deque;
 import java.util.LinkedList;
-import java.util.List;
-import java.util.Observable;
-import java.util.Observer;
-
-import location.LocationHandler;
-import sensors.SensorHandler;
 
 /**
  *
@@ -38,18 +32,25 @@ import sensors.SensorHandler;
  *
  */
 // TODO: app freezes if wifi is lost after it starts
-public class MqttPublisher implements MqttCallback, Observer {
+public class MqttPublisher implements MqttCallback {
+    static final String TAG = "SomeApp";
+    // Our own brokers:
+    // unencrypted: tcp://130.211.153.252:1883
+    // encrypted: tcp://130.211.153.252:8883
+    private static final String BROKER_URL = "tcp://130.211.153.252:1883";  // google cloud
+    private static final String USERNAME = "ehcxlgcl";
+    private static final String PASSWORD = "AQsUmTw6wYee";
+//    private static final String BROKER_URL = "tcp://54.92.237.174:17981"; // mqtt cloud
+//    private static final String USERNAME = "ehcxlgcl";
+//    private static final String PASSWORD = "AQsUmTw6wYee";
 
-    private String brokerUrl;
     private String clientId;
     private MqttAsyncClient client;
     private Context parentContext;
     private MqttConnectOptions connectOptions;
     private Deque<String> msqQueue = new LinkedList<>();
     private String log = "";
-    public int msgCount = 0;
 
-    private List<Observable> toObserve = new ArrayList<>(); // sensor handler classes are added here
     private TextView view;
 
     public MqttPublisher(String clientId, Context parentContext){
@@ -57,6 +58,7 @@ public class MqttPublisher implements MqttCallback, Observer {
         this.parentContext = parentContext;
         this.connectOptions = new MqttConnectOptions();
         setConnectOptions(getConnectOptions());
+        setupClient();
     }
 
     public void publish(TopicMsg tm){
@@ -75,9 +77,11 @@ public class MqttPublisher implements MqttCallback, Observer {
                 IMqttToken sendToken = client.publish(topic, msg);
                 sendToken.waitForCompletion();
                 System.out.println("Sending message: " + new String(msg.getPayload(), StandardCharsets.UTF_8));
-                updateScreen(String.format("Sending msg %d:\n    %s\n", ++msgCount, _msg));
+                //updateScreen(String.format("Sending msg %d:\n    %s\n", ++msgCount, _msg));
+                Log.i(TAG, "message sent");
             } catch (MqttException e) {
                 System.out.println("Error while sending msg: " + e.getMessage());
+                Log.i(TAG, "Error while sending msg: " + e.getMessage());
                 // e.printStackTrace();
             } finally {
                 stopConnection();
@@ -95,6 +99,7 @@ public class MqttPublisher implements MqttCallback, Observer {
             connectToken.waitForCompletion();
         } catch (MqttException e) {
             System.out.println("Problem connecting.");
+            Log.i(TAG, "Problem connecting: " + e.getMessage());
             if (connectToken != null){
                 System.out.println(connectToken.getResponse());
             }
@@ -125,50 +130,19 @@ public class MqttPublisher implements MqttCallback, Observer {
 
     @Override
     public void deliveryComplete(IMqttDeliveryToken token) {
-        MqttMessage msg = null;
+        MqttMessage msg;
         try {
             msg = token.getMessage();
             if (msg == null){
                 System.out.println("Message delivered.");
-                updateScreen("    Successfully delivered.\n");
+                Log.i(TAG, "Message delivered.");
+                //updateScreen("    Successfully delivered.\n");
             } else {
                 System.out.println("Delivering message: " + msg.toString());
+                Log.i(TAG, "Delivering message: " + msg.toString());
             }
         } catch (MqttException e) {
             e.printStackTrace();
-        }
-    }
-
-    // adds this publisher as an observer for all observables that send it data to publish
-    public void setupObserver() {
-        System.out.println("Adding observer to (" + toObserve.size() + ") observables");
-        for (Observable o : this.toObserve){
-            o.addObserver(this);
-        }
-    }
-
-    public void addObservable(Observable o){
-        System.out.println("Adding " + o.getClass().toString() + " to list of observables");
-        toObserve.add(o);
-    }
-
-    /**
-     * Publishes the message in a TopicMsg to this publisher's broker on the topic specified in
-     * the TopicMsg.
-     *
-     * @param observable is a SensorHandler
-     * @param data is a TopicMsg
-     */
-    @Override
-    public void update(Observable observable, Object data) {
-        if (observable instanceof SensorHandler && data instanceof TopicMsg){
-            ((SensorHandler) observable).updateScreen();
-            publish((TopicMsg) data);
-        } else if (observable instanceof LocationHandler && data instanceof TopicMsg){
-            ((LocationHandler) observable).updateScreen();
-            publish((TopicMsg) data);
-        } else {
-            throw new Error("Tried to publish incorrect data type: " + data.getClass());
         }
     }
 
@@ -188,7 +162,7 @@ public class MqttPublisher implements MqttCallback, Observer {
                 //String appCacheDir = getParentContext().getCacheDir().getAbsolutePath();
                 //MqttDefaultFilePersistence fp = new MqttDefaultFilePersistence(appCacheDir);
                 MemoryPersistence mp = new MemoryPersistence();
-                setClient(new MqttAsyncClient(getBrokerUrl(), getClientId(), mp));
+                setClient(new MqttAsyncClient(BROKER_URL, clientId, mp));
             } catch (MqttException e) {
                 System.out.println("Problem setting the MqttAsyncClient");
             }
@@ -197,16 +171,8 @@ public class MqttPublisher implements MqttCallback, Observer {
         }
     }
 
-    public String getClientId() {
-        return clientId;
-    }
-
     public String getBrokerUrl() {
-        return brokerUrl;
-    }
-
-    public void setBrokerUrl(String brokerUrl) {
-        this.brokerUrl = brokerUrl;
+        return BROKER_URL;
     }
 
     public MqttConnectOptions getConnectOptions() {
@@ -214,8 +180,8 @@ public class MqttPublisher implements MqttCallback, Observer {
     }
 
     public void setConnectOptions(MqttConnectOptions connectOptions) {
-        connectOptions.setUserName("ehcxlgcl");
-        connectOptions.setPassword("AQsUmTw6wYee".toCharArray());
+        connectOptions.setUserName(USERNAME);
+        connectOptions.setPassword(PASSWORD.toCharArray());
     }
 
     public View getView() {

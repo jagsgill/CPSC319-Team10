@@ -11,25 +11,37 @@ public class AccelerometerDataSet extends SensorDataSet {
     public AccelerometerDataSet(){
     }
 
-    public void addDataPoint(float x, float y, float z, long time){
-        getData().add(new AccelDataPoint(x, y, z, time));
+    public boolean isEmpty() {
+        return data.peek() == null;
+    }
+
+    public void addDataPoint(AccelDataPoint point){
+        getData().add(point);
+    }
+
+    public AccelDataPoint removeDataPoint() {
+        return data.poll();
     }
 
     public Deque<AccelDataPoint> getData(){
         return this.data;
     }
 
-    public class AccelDataPoint {
+    public static class AccelDataPoint {
         float x;
         float y;
         float z;
         long time; // in milliseconds since epoch
+        public boolean isStep;
+        public double lat;
+        public double lng;
 
-        public AccelDataPoint(float x, float y, float z, long time){
+        public AccelDataPoint(float x, float y, float z, long time, boolean isStep){
             this.x = x;
             this.y = y;
             this.z = z;
             this.time = time;
+            this.isStep = isStep;
         }
 
         public float getX() {
