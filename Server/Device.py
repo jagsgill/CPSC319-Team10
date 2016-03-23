@@ -1,24 +1,40 @@
 from Session import Sessions
 from Session import Session
+from AccelerometerPayload import AccelerometerPayload
+from Location import Location
+import json
 
 class Device:
-    def __init__(self, devID, sess):
-        self.deviceID = devID
-        self.sessions = sess
+    def __init__(self, devId, time,x,y,z,lat,long):
+        self.deviceID = devId
+        self.timestamp = time
+        self.x = x
+        self.y = y
+        self.z = z
+        self.latitude = lat
+        self.longitude = long
 
-    def __str__(self):
-        return "{\"device_id\": " + str(self.deviceID) + "," + str(self.sessions) + "}"
+    def getDeviceId(self):
+        return self.deviceID
 
-class Devices:
-    def __init__(self, listOfDevices):
-        self.devices = listOfDevices
+    def getTimestamp(self):
+        return self.timestamp
 
-    def __str__(self):
-        retString = "{\"devices\": ["
-        for d in self.devices:
-            retString += (str(d) + ",")
-        retString = retString[:-1] + "]}"
-        return retString
+    def getX(self):
+        return self.x
+
+    def getY(self):
+        return self.y
+
+    def getZ(self):
+        return self.z
+
+    def getLatitude(self):
+        return self.latitude
+
+    def getLongitude(self):
+        return self.longitude
+
 # test
 #dvID = 1234
 #ses = Session(9,1,2,3,100,200)

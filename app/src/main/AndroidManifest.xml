@@ -32,6 +32,7 @@
         <activity
             android:name=".UserPreferenceActivity"
             android:label="@string/title_activity_setting"></activity>
+
     </application>
 
 </manifest>

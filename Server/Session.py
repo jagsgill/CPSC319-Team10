@@ -1,7 +1,8 @@
 from AccelerometerPayload import AccelerometerPayload
 from Location import Location
+import json
 
-class Session:
+class Session:#(json.JSONEncoder):
     def __init__(self, tmstmp, x, y, z, lat, long):
         self.timestamp = tmstmp
         self.accelerometerPayload = AccelerometerPayload(x,y,z)
@@ -21,6 +22,12 @@ class Session:
     def getLocation(self):
         return self.location
 
+    # def encodeSession(self):
+    #     n = json.dumps(self.__dict__)
+    #     return json.loads(n)
+
+
+
 class Sessions:
     def __init__(self, listOfSessions):
         self.sessions = listOfSessions
@@ -31,6 +38,7 @@ class Sessions:
             retString += str(s) + ","
         retString = (retString[:-1]) + "]"
         return retString
+
 
 # test
 #ses = Session(9,1,2,3,100,200)

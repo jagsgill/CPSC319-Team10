@@ -136,5 +136,6 @@ public class MainActivity extends ActionBarActivity {
     public void display(String str) {
         TextView tv = (TextView) findViewById(R.id.display);
         tv.setText(str);
+
     }
 }

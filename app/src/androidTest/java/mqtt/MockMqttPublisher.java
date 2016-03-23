@@ -34,7 +34,7 @@ public class MockMqttPublisher extends MqttPublisher {
     @Override
     public void setupClient(){
         for(int i = 0; i < brokerUrls.size(); i++) {
-            super.setBrokerUrl(this.brokerUrls.get(i));
+            //super.setBrokerUrl(this.brokerUrls.get(i));
             super.setupClient();
             // if successfully connected to a broker, then don't look at the others
             if (super.getClient() != null){

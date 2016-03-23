@@ -53,7 +53,7 @@ public class MqttPublisherTest {
             generators.add(new MockDataGenerator(topic));
         }
 
-        publisher.setupObserver();
+        //publisher.setupObserver();
         publisher.setupClient();
         System.out.println("done setup!");
     }
