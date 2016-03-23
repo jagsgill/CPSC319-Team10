@@ -24,10 +24,12 @@
 
     <Button
         android:id="@+id/button"
+        android:textSize="23dp"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:text="@string/button_start"
         android:onClick="onButtonClick"
-        android:layout_weight="1"/>
+        android:layout_weight="1"
+        android:background="@drawable/button_start"/>
 
 </LinearLayout>

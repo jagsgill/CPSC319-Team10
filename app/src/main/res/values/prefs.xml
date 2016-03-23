@@ -23,11 +23,11 @@
         <item>Ultra High</item>
     </string-array>
     <string-array name="step_counter_sensitivity_values">
-        <item>10</item>
-        <item>12.5</item>
-        <item>15</item>
-        <item>17.5</item>
         <item>20</item>
+        <item>17.5</item>
+        <item>15</item>
+        <item>12.5</item>
+        <item>10</item>
     </string-array>
 
     <string name="default_sensitivity">15</string>

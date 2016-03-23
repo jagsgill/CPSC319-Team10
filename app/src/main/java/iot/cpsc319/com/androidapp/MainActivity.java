@@ -3,6 +3,7 @@ package iot.cpsc319.com.androidapp;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.graphics.PorterDuff;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -28,6 +29,7 @@ public class MainActivity extends ActionBarActivity {
     private Intent recordingIntent;
     private WeakReference<RecordingService> mService;
     private boolean mBound;
+    private boolean serviceStarted;
 
     private LocationManager locationManager;
     private LocationHandler locationHandler;
@@ -74,7 +76,8 @@ public class MainActivity extends ActionBarActivity {
     protected void onResume() {
         super.onResume();
         Log.i(TAG, "MainActivity onResume");
-        bindService(new Intent(this, RecordingService.class), mConnection, 0);
+        if (serviceStarted)
+            bindService(new Intent(this, RecordingService.class), mConnection, 0);
     }
 
     @Override
@@ -86,14 +89,21 @@ public class MainActivity extends ActionBarActivity {
     public void onButtonClick(View view) {
         Button button = (Button) view;
         if (button.getText().equals(getString(R.string.button_start))) {
+            display("0");
             button.setText(R.string.button_stop);
-            button.setBackgroundColor(getResources().getColor(R.color.stopColor));
+            //button.setBackgroundColor(getResources().getColor(R.color.stopColor));
+            //button.getBackground().setColorFilter(0xFFFF0000, PorterDuff.Mode.MULTIPLY);
+            button.setBackground(getResources().getDrawable(R.drawable.button_stop));
             recordingIntent = new Intent(this, RecordingService.class);
+            serviceStarted = true;
             startService(recordingIntent);
             bindService(new Intent(this, RecordingService.class), mConnection, 0);
         } else {
             button.setText(R.string.button_start);
-            button.setBackgroundColor(getResources().getColor(R.color.startColor));
+            button.setBackground(getResources().getDrawable(R.drawable.button_start));
+            //button.getBackground().setColorFilter(0xFF00FF00, PorterDuff.Mode.MULTIPLY);
+            //button.setBackgroundColor(getResources().getColor(R.color.startColor));
+            serviceStarted = false;
             stopService(recordingIntent);
             unbindService(mConnection);
             mBound = false;

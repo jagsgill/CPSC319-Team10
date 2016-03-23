@@ -149,8 +149,8 @@ public class RecordingService extends Service implements Observer,
                 loc = "null,null";
             }
             */
-            msg.append(clientId).append(",").append(time).append(",").append(x).append(",")
-                    .append(y).append(",").append(z).append(",").append("None, None");
+            msg.append("999").append(",").append(time).append(",").append(x).append(",")
+                    .append(y).append(",").append(z).append(",").append(time).append(",0,0$");
         }
         String topic = "hello/world";
         mqttPublisher.publish(new TopicMsg(topic, msg.toString()));
