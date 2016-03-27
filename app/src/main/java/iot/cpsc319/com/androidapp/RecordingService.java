@@ -80,9 +80,17 @@ public class RecordingService extends Service {
     }
 
     // format data and publish when called
+    // TODO: try to separate sensor data publishing?
+    // Watches can publish any topic under sensors/<client id>/<...>. Other topics are banned!
+    // e.g. sensors/<client id>/accel
+    //      sensors/<client id>/gps
+    //      sensors/<client id>/batteryanduploadrate
+    // If not separated, broker manager can currently handle combined data under sensors/<client id>/combined
+    // which includes accel & gps data only at the moment (same as for first demo)...
+    // The last part of topic should match what is used in the server's broker manager!
     public void update() {
         try {
-            mqttPublisher.publish(new TopicMsg("hello/world",
+            mqttPublisher.publish(new TopicMsg("sensors/"+clientId+"/combined",
                     "Acceleration: " + accelerometer.retrieveData()
                             + (gps.hasData() ? ("\r\nLocation: " + gps.retrieveData()) : " ")));
         } catch (ConnectivityException e) {
@@ -93,7 +101,7 @@ public class RecordingService extends Service {
             Toast.makeText(this, "Network not found, exiting...", Toast.LENGTH_SHORT).show();
             stopSelf();
         }
-    }
+}
 
     public void setMainActivity(WeakReference<MainActivity> act) {
         mMainActivity = act;
