@@ -3,10 +3,7 @@ package mqtt;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
-import android.view.View;
-import android.widget.TextView;
 
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.IMqttToken;
@@ -18,8 +15,10 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Deque;
-import java.util.LinkedList;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+
+import javax.net.ssl.SSLContext;
 
 /**
  *
@@ -37,84 +36,71 @@ public class MqttPublisher implements MqttCallback {
     // Our own brokers:
     // unencrypted: tcp://130.211.153.252:1883
     // encrypted: tcp://130.211.153.252:8883
-    private static final String BROKER_URL = "tcp://130.211.153.252:1883";  // google cloud
+    //private static final String BROKER_URL = "tcp://130.211.153.252:1883";  // google cloud
+    //private static final String USERNAME = "ehcxlgcl";
+    //private static final String PASSWORD = "AQsUmTw6wYee";
+    private static final String BROKER_URL = "ssl://54.92.237.174:27981"; // mqtt cloud
     private static final String USERNAME = "ehcxlgcl";
     private static final String PASSWORD = "AQsUmTw6wYee";
-//    private static final String BROKER_URL = "tcp://54.92.237.174:17981"; // mqtt cloud
-//    private static final String USERNAME = "ehcxlgcl";
-//    private static final String PASSWORD = "AQsUmTw6wYee";
 
+    private ConnectivityManager connMgr;
     private String clientId;
     private MqttAsyncClient client;
-    private Context parentContext;
     private MqttConnectOptions connectOptions;
-    private Deque<String> msqQueue = new LinkedList<>();
-    private String log = "";
-
-    private TextView view;
 
     public MqttPublisher(String clientId, Context parentContext){
         this.clientId = clientId;
-        this.parentContext = parentContext;
-        this.connectOptions = new MqttConnectOptions();
-        setConnectOptions(getConnectOptions());
+        connMgr = (ConnectivityManager) parentContext.getSystemService(Context.CONNECTIVITY_SERVICE);
+        setConnectOptions();
         setupClient();
     }
 
-    public void publish(TopicMsg tm){
+    // startConnection must be called before publish
+    public void publish(TopicMsg tm) throws ConnectivityException {
         // TODO: app freezes at startup if no wifi
         // make sure we're connected to the internet
-        ConnectivityManager connMgr = (ConnectivityManager)
-                parentContext.getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
-        if (networkInfo != null && networkInfo.isConnected()) {
+        if (networkAvailable()) {
             // if connected: start connection, publish to broker, then close connection
-            startConnection();
+            // startConnection();
             String topic = tm.getTopic();
             String _msg = tm.getMsg();
             MqttMessage msg = new MqttMessage(_msg.getBytes());
             try {
                 IMqttToken sendToken = client.publish(topic, msg);
                 sendToken.waitForCompletion();
-                System.out.println("Sending message: " + new String(msg.getPayload(), StandardCharsets.UTF_8));
-                //updateScreen(String.format("Sending msg %d:\n    %s\n", ++msgCount, _msg));
                 Log.i(TAG, "message sent");
             } catch (MqttException e) {
-                System.out.println("Error while sending msg: " + e.getMessage());
-                Log.i(TAG, "Error while sending msg: " + e.getMessage());
-                // e.printStackTrace();
-            } finally {
-                stopConnection();
+                throw new ConnectivityException(e);
             }
         } else {
-            // just throw away the message for now...
-            System.out.println("Not connected. Message not sent.");
+            throw new ConnectivityException("Network unavailable");
         }
     }
 
-    public void startConnection(){
+    public void startConnection() throws ConnectivityException {
+        if (! networkAvailable())
+            throw new ConnectivityException("Network unavailable");
+
         IMqttToken connectToken = null;
         try {
-            connectToken = client.connect(getConnectOptions());
+            connectToken = client.connect(connectOptions);
             connectToken.waitForCompletion();
         } catch (MqttException e) {
-            System.out.println("Problem connecting.");
-            Log.i(TAG, "Problem connecting: " + e.getMessage());
+            String msg = e.getMessage();
             if (connectToken != null){
-                System.out.println(connectToken.getResponse());
+                msg += "\t" + connectToken.getResponse();
             }
-            // for now, do nothing useful if we can't connect
+            throw new ConnectivityException(msg);
         }
 
         client.setCallback(this);
     }
 
-    public void stopConnection(){
+    public void stopConnection() throws ConnectivityException {
         try {
             client.disconnect();
         } catch (MqttException e) {
-            System.out.println("Problem disconnecting...");
-            // for now, do nothing useful
+            throw new ConnectivityException(e.getMessage());
         }
     }
 
@@ -130,13 +116,13 @@ public class MqttPublisher implements MqttCallback {
 
     @Override
     public void deliveryComplete(IMqttDeliveryToken token) {
+        /*
         MqttMessage msg;
         try {
             msg = token.getMessage();
             if (msg == null){
                 System.out.println("Message delivered.");
                 Log.i(TAG, "Message delivered.");
-                //updateScreen("    Successfully delivered.\n");
             } else {
                 System.out.println("Delivering message: " + msg.toString());
                 Log.i(TAG, "Delivering message: " + msg.toString());
@@ -144,6 +130,7 @@ public class MqttPublisher implements MqttCallback {
         } catch (MqttException e) {
             e.printStackTrace();
         }
+        */
     }
 
     public MqttAsyncClient getClient() {
@@ -175,49 +162,22 @@ public class MqttPublisher implements MqttCallback {
         return BROKER_URL;
     }
 
-    public MqttConnectOptions getConnectOptions() {
-        return connectOptions;
-    }
-
-    public void setConnectOptions(MqttConnectOptions connectOptions) {
+    public void setConnectOptions() {
+        connectOptions = new MqttConnectOptions();
         connectOptions.setUserName(USERNAME);
         connectOptions.setPassword(PASSWORD.toCharArray());
-    }
-
-    public View getView() {
-        return view;
-    }
-
-    public void setView(TextView v) {
-        this.view = v;
-        view.setMovementMethod(new ScrollingMovementMethod());
-    }
-
-    public Context getParentContext() {
-        return parentContext;
-    }
-
-    public void updateScreen(String msg){
-        // update the log, then send tell the UI thread to update the screen
-        updateLog(msg);
-        view.post(new Runnable() {
-            @Override
-            public void run() {
-                view.setText(log);
-            }
-        });
-    }
-
-    private void updateLog(String msg){
-        if (msqQueue.size() > 6) {
-            msqQueue.pollFirst();
+        try {
+            SSLContext sslContext = SSLContext.getInstance("TLSv1.2");
+            sslContext.init(null, null, null);
+            connectOptions.setSocketFactory(sslContext.getSocketFactory());
+        } catch (NoSuchAlgorithmException | KeyManagementException e) {
+            e.printStackTrace();
         }
-        msqQueue.add(msg);
-        String newLog = "";
-        for (String s : this.msqQueue){
-            newLog += s;
-        }
-        this.log = newLog;
+    }
+
+    private boolean networkAvailable() {
+        NetworkInfo info = connMgr.getActiveNetworkInfo();
+        return info != null && info.isConnected();
     }
 }
 

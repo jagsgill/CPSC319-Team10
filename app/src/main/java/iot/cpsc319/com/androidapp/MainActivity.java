@@ -1,10 +1,10 @@
 package iot.cpsc319.com.androidapp;
 
+import android.app.ActivityManager;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.graphics.PorterDuff;
-import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
@@ -15,11 +15,8 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.lang.ref.WeakReference;
-
-import location.LocationHandler;
 
 // TODO check android target api (20 or 21 okay?)
 public class MainActivity extends ActionBarActivity {
@@ -28,29 +25,23 @@ public class MainActivity extends ActionBarActivity {
 
     private Intent recordingIntent;
     private WeakReference<RecordingService> mService;
-    private boolean mBound;
-    private boolean serviceStarted;
-
-    private LocationManager locationManager;
-    private LocationHandler locationHandler;
+    private boolean serviceRunning;
+    private Button button;
 
     private ServiceConnection mConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName className, IBinder service) {
+            Log.i(TAG, "MainActivity onServiceConnected");
+            buttonOn();
             mService = ((RecordingService.LocalBinder) service).getService();
             RecordingService s;
             if ((s = mService.get()) != null) {
                 s.setMainActivity(new WeakReference<>(MainActivity.this));
-                mBound = true;
-            } else {
-                Log.i(TAG, "Failed to initialise RecordingService");
-                Toast.makeText(MainActivity.this, "Failed to initialise RecordingService",
-                        Toast.LENGTH_LONG).show();
             }
         }
         @Override
         public void onServiceDisconnected(ComponentName arg0) {
-            mBound = false;
+            serviceRunning = false;
         }
     };
 
@@ -58,6 +49,7 @@ public class MainActivity extends ActionBarActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        button = (Button) findViewById(R.id.button);
         PreferenceManager.setDefaultValues(this, R.xml.preference_screen, false);
         Log.i(TAG, "MainActivity onCreate");
     }
@@ -66,9 +58,8 @@ public class MainActivity extends ActionBarActivity {
     protected void onPause() {
         super.onPause();
         Log.i(TAG, "MainActivity onPause");
-        if (mBound) {
+        if (serviceRunning) {
             unbindService(mConnection);
-            mBound = false;
         }
     }
 
@@ -76,7 +67,7 @@ public class MainActivity extends ActionBarActivity {
     protected void onResume() {
         super.onResume();
         Log.i(TAG, "MainActivity onResume");
-        if (serviceStarted)
+        if (serviceRunning)
             bindService(new Intent(this, RecordingService.class), mConnection, 0);
     }
 
@@ -87,26 +78,14 @@ public class MainActivity extends ActionBarActivity {
     }
 
     public void onButtonClick(View view) {
-        Button button = (Button) view;
         if (button.getText().equals(getString(R.string.button_start))) {
-            display("0");
-            button.setText(R.string.button_stop);
-            //button.setBackgroundColor(getResources().getColor(R.color.stopColor));
-            //button.getBackground().setColorFilter(0xFFFF0000, PorterDuff.Mode.MULTIPLY);
-            button.setBackground(getResources().getDrawable(R.drawable.button_stop));
             recordingIntent = new Intent(this, RecordingService.class);
-            serviceStarted = true;
             startService(recordingIntent);
             bindService(new Intent(this, RecordingService.class), mConnection, 0);
         } else {
-            button.setText(R.string.button_start);
-            button.setBackground(getResources().getDrawable(R.drawable.button_start));
-            //button.getBackground().setColorFilter(0xFF00FF00, PorterDuff.Mode.MULTIPLY);
-            //button.setBackgroundColor(getResources().getColor(R.color.startColor));
-            serviceStarted = false;
+            buttonOff();
             stopService(recordingIntent);
             unbindService(mConnection);
-            mBound = false;
         }
     }
 
@@ -133,9 +112,30 @@ public class MainActivity extends ActionBarActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    public void display(String str) {
+    void display(String str) {
         TextView tv = (TextView) findViewById(R.id.display);
         tv.setText(str);
+    }
 
+    private void buttonOn() {
+        display("0");
+        button.setText(R.string.button_stop);
+        button.setBackground(getResources().getDrawable(R.drawable.button_stop));
+        serviceRunning = true;
+    }
+
+    void buttonOff() {
+        button.setText(R.string.button_start);
+        button.setBackground(getResources().getDrawable(R.drawable.button_start));
+        serviceRunning = false;
+    }
+
+    private boolean isRecording() {
+        ActivityManager am = (ActivityManager) this.getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo s : am.getRunningServices(Integer.MAX_VALUE)) {
+            if (s.service.getClassName().equals(RecordingService.class.getName()))
+                return true;
+        }
+        return false;
     }
 }
