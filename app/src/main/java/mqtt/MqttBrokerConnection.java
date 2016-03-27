@@ -30,13 +30,13 @@ import java.util.concurrent.ExecutionException;
  * performed asyncronously (on worker threads).
  *
  * Typical usage:
- * 1. Construct a BrokerConnection
+ * 1. Construct a MqttBrokerConnection
  * 2. Call startAndWaitForConnectionToBroker()
  * 3. call getMqttClient to obtain a configured MQTT mqttClient
  * 4. To stop the connection, call stopConnectionToBroker()
  *
  */
-public class BrokerConnection {
+public class MqttBrokerConnection {
 
     private static final String TAG = "SomeApp";
 
@@ -60,7 +60,7 @@ public class BrokerConnection {
     private boolean isConnectedToBroker;
 
 
-    public BrokerConnection(Context parentContext, String clientId, MqttPublisher publisher, boolean encrypted){
+    public MqttBrokerConnection(Context parentContext, String clientId, MqttPublisher publisher, boolean encrypted){
         this.parentContext = parentContext;
         this.clientId = clientId;
         this.publisher = publisher;

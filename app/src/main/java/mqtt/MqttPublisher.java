@@ -1,23 +1,14 @@
 package mqtt;
 
 import android.content.Context;
-import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
-import android.widget.TextView;
 
 import org.eclipse.paho.client.mqttv3.IMqttAsyncClient;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.IMqttToken;
-import org.eclipse.paho.client.mqttv3.MqttAsyncClient;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
-
-import java.nio.charset.StandardCharsets;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
-
-import javax.net.ssl.SSLContext;
 
 /**
  *
@@ -35,7 +26,7 @@ public class MqttPublisher implements MqttCallback {
     static final String TAG = "SomeApp";
 
     public boolean ENCRYPT = false;
-    private BrokerConnection brokerConnection;
+    private MqttBrokerConnection brokerConnection;
     private IMqttAsyncClient mqttClient;
 
     private String clientId;
@@ -45,7 +36,7 @@ public class MqttPublisher implements MqttCallback {
     public MqttPublisher(String clientId, Context parentContext){
         this.clientId = clientId;
         this.parentContext = parentContext;
-        this.brokerConnection = new BrokerConnection(getParentContext(), getClientId(), this, getIsEncrypted());
+        this.brokerConnection = new MqttBrokerConnection(getParentContext(), getClientId(), this, getIsEncrypted());
     }
 
     public void startConnection() throws ConnectivityException {
