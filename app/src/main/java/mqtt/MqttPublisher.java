@@ -25,7 +25,7 @@ public class MqttPublisher implements MqttCallback {
 
     static final String TAG = "SomeApp";
 
-    public boolean ENCRYPT = false;
+    public boolean ENCRYPT = true;
     private MqttBrokerConnection brokerConnection;
     private IMqttAsyncClient mqttClient;
 

@@ -19,11 +19,10 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.security.KeyManagementException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertificateException;
 import java.util.concurrent.ExecutionException;
+
+import javax.net.SocketFactory;
+import javax.net.ssl.SSLSocketFactory;
 
 /**
  * This class is used to manage a connection to an MQTT broker. The network operations are
@@ -65,12 +64,12 @@ public class MqttBrokerConnection {
         this.clientId = clientId;
         this.publisher = publisher;
         this.ENCRYPT = encrypted;
-        this.connectOptions = createConnectOptions();
         this.isConnectedToBroker = false;
     }
 
     public void startAndWaitForConnectionToBroker() throws ConnectivityException {
 
+        this.connectOptions = createConnectOptions();
         setBrokerUrl(); // must be done before creating a client
         setMqttClient(createMqttClient());
 
@@ -104,14 +103,16 @@ public class MqttBrokerConnection {
         connectOptions.setPassword(PASSWORD.toCharArray());
 
         if (ENCRYPT){
-            SSLSupplier sslSupplier = new HttpSSLSupplier();
+            SSLSupplier sslSupplier = new SSLSupplier(parentContext);
+            SocketFactory sf = null;
             try {
-                sslSupplier.setupSSL();
-            } catch (CertificateException | NoSuchAlgorithmException | KeyStoreException | IOException | KeyManagementException e) {
+                sf = sslSupplier.getSocketFactory();
+                System.out.println("##### SocketFactory type: " + sf.getClass().toString());
+            } catch (Exception e) {
                 e.printStackTrace();
             }
 
-            connectOptions.setSocketFactory(sslSupplier.getSslSocketFactory());
+            connectOptions.setSocketFactory(sf);
         }
 
         System.out.println("# Reached end of connection options");
@@ -252,8 +253,6 @@ public class MqttBrokerConnection {
         private void findBrokerUrl() throws IOException {
             // Adapted from http://developer.android.com/training/basics/network-ops/connecting.html
             InputStream is = null;
-            int len = 500;
-
 
             URL url = new URL(urlServingBrokerIP);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -274,7 +273,7 @@ public class MqttBrokerConnection {
             System.out.println("IP data: " + ipAddress);
 
             if (ENCRYPT) {
-                BROKER_URL = "tcp://" + ipAddress + ":" + brokerSecurePort;
+                BROKER_URL = "ssl://" + ipAddress + ":" + brokerSecurePort;
             } else {
                 BROKER_URL = "tcp://" + ipAddress + ":" + brokerInsecurePort;
             }
