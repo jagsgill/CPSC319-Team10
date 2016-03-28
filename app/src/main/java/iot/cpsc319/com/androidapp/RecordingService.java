@@ -1,7 +1,11 @@
 package iot.cpsc319.com.androidapp;
 
 import android.app.Service;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.os.BatteryManager;
 import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
@@ -18,7 +22,7 @@ import sensors.AccRecorder;
 
 public class RecordingService extends Service {
 
-    private static final String TAG =  "SomeApp";
+    private static final String TAG = "SomeApp";
 
     private final String clientId = getSerialNumber();
     private LocalBinder mBinder = new LocalBinder();
@@ -26,6 +30,7 @@ public class RecordingService extends Service {
     private AccRecorder accelerometer;
     private MqttPublisher mqttPublisher;
     private GpsRecorder gps;
+    private int batteryLevel;
 
     public class LocalBinder extends Binder {
         WeakReference<RecordingService> getService() {
@@ -53,6 +58,9 @@ public class RecordingService extends Service {
 
         accelerometer = new AccRecorder(this);
         accelerometer.start();
+
+        // todo a separate recorder?
+        registerBatteryLevelReceiver();
 
         return Service.START_STICKY;
     }
@@ -90,9 +98,10 @@ public class RecordingService extends Service {
     // The last part of topic should match what is used in the server's broker manager!
     public void update() {
         try {
-            mqttPublisher.publish(new TopicMsg("sensors/"+clientId+"/combined",
+            mqttPublisher.publish(new TopicMsg("sensors/" + clientId + "/combined",
                     "Acceleration: " + accelerometer.retrieveData()
-                            + (gps.hasData() ? ("\r\nLocation: " + gps.retrieveData()) : " ")));
+                            + (gps.hasData() ? ("\r\nLocation: " + gps.retrieveData()) : " "
+                            + "\r\nBattery Level: " + batteryLevel + "%")));
         } catch (ConnectivityException e) {
             MainActivity act;
             if ((act = mMainActivity.get()) != null) {
@@ -101,7 +110,7 @@ public class RecordingService extends Service {
             Toast.makeText(this, "Network not found, exiting...", Toast.LENGTH_SHORT).show();
             stopSelf();
         }
-}
+    }
 
     public void setMainActivity(WeakReference<MainActivity> act) {
         mMainActivity = act;
@@ -118,18 +127,34 @@ public class RecordingService extends Service {
      * Returns the unique serial number of the device.
      * More info at {@link 'http://developer.samsung.com/technical-doc/view.do?v=T000000103'}
      */
-    private String getSerialNumber(){
+    private String getSerialNumber() {
         String serialnum = null;
         try {
             Class<?> c = Class.forName("android.os.SystemProperties");
-            Method get = c.getMethod("get", String.class, String.class );
-            serialnum = (String)(   get.invoke(c, "ro.serialno", "unknown" )  );
-        }
-        catch (Exception ignored)
-        {
+            Method get = c.getMethod("get", String.class, String.class);
+            serialnum = (String) (get.invoke(c, "ro.serialno", "unknown"));
+        } catch (Exception ignored) {
             // we should not reach here
             // there should be a serial number available for all watches used...
         }
         return serialnum;
+    }
+
+    private void registerBatteryLevelReceiver() {
+        IntentFilter filter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+        BroadcastReceiver batteryLevelReceiver = new BroadcastReceiver() {
+            public void onReceive(Context context, Intent intent) {
+                int rawLevel = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+                int scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+                int level = -1;
+                if (rawLevel >= 0 && scale > 0) {
+                    level = (rawLevel * 100) / scale;
+                }
+                if (level != batteryLevel) {
+                    batteryLevel = level;
+                }
+            }
+        };
+        this.registerReceiver(batteryLevelReceiver, filter);
     }
 }

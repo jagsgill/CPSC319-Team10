@@ -88,7 +88,9 @@ public class MqttBrokerConnection {
 
     public void stopConnection() throws ConnectivityException {
         try {
-            getMqttClient().disconnect();
+            if (getMqttClient() != null) {
+                getMqttClient().disconnect();
+            }
         } catch (MqttException e) {
             throw new ConnectivityException(e.getMessage());
         }

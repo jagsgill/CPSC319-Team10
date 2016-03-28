@@ -6,6 +6,7 @@ import android.preference.ListPreference;
 import android.preference.PreferenceCategory;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
+import android.preference.SwitchPreference;
 
 import iot.cpsc319.com.androidapp.R;
 
@@ -29,9 +30,16 @@ public class UserPreferenceFragment extends PreferenceFragment
     private void updateSummary() {
         PreferenceCategory cat = (PreferenceCategory) getPreferenceScreen().getPreference(0);
         for (int i = 0; i < cat.getPreferenceCount(); i++) {
-            ListPreference pref = (ListPreference) cat.getPreference(i);
-            String summary = pref.getEntry().toString();
-            pref.setSummary(summary);
+            if (cat.getPreference(i) instanceof ListPreference) {
+                ListPreference pref = (ListPreference) cat.getPreference(i);
+                String summary = pref.getEntry().toString();
+                pref.setSummary(summary);
+            }
+            else if (cat.getPreference(i) instanceof SwitchPreference) {
+                SwitchPreference pref = (SwitchPreference) cat.getPreference(i);
+                pref.setSummary(pref.getSummary());
+
+            }
         }
     }
 }

@@ -7,6 +7,7 @@
 
     <string name="saved_upload_rate">iot.cpsc319.com.androidapp.SAVED_UPLOAD_RATE</string>
     <string name="saved_sensitivity">iot.cpsc319.com.androidapp.SAVED_SENSITIVITY</string>
+    <string name="saved_is_encrypted">iot.cpsc319.com.androidapp.SAVED_IS_ENCRYPTED</string>
 
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>

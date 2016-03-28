@@ -1,6 +1,8 @@
 package mqtt;
 
 import android.content.Context;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 import org.eclipse.paho.client.mqttv3.IMqttAsyncClient;
@@ -10,18 +12,18 @@ import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
+import iot.cpsc319.com.androidapp.R;
+
 /**
- *
  * Typical workflow for using this class:
  * 1. Construct an MqttPublisher
  * 2. add all observable classes to {@code toObserve}
  * 2. set connection options: broker url, port
- *
+ * <p/>
  * Starting and closing the connection are handled at the time of publishing data
- *
  */
 
-public class MqttPublisher implements MqttCallback {
+public class MqttPublisher implements MqttCallback, SharedPreferences.OnSharedPreferenceChangeListener {
 
     static final String TAG = "SomeApp";
 
@@ -33,7 +35,7 @@ public class MqttPublisher implements MqttCallback {
 
     private Context parentContext;
 
-    public MqttPublisher(String clientId, Context parentContext){
+    public MqttPublisher(String clientId, Context parentContext) {
         this.clientId = clientId;
         this.parentContext = parentContext;
         this.brokerConnection = new MqttBrokerConnection(getParentContext(), getClientId(), this, getIsEncrypted());
@@ -42,10 +44,14 @@ public class MqttPublisher implements MqttCallback {
     public void startConnection() throws ConnectivityException {
         brokerConnection.startAndWaitForConnectionToBroker();
         this.mqttClient = brokerConnection.getMqttClient();
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(parentContext);
+        sharedPreferences.registerOnSharedPreferenceChangeListener(this);
     }
 
     public void stopConnection() throws ConnectivityException {
-        brokerConnection.stopConnection();
+        if (brokerConnection != null) {
+            brokerConnection.stopConnection();
+        }
     }
 
     // startConnection must be called before publish
@@ -95,12 +101,12 @@ public class MqttPublisher implements MqttCallback {
         */
     }
 
-    public boolean getIsEncrypted(){
+    public boolean getIsEncrypted() {
         return ENCRYPT;
     }
 
-    public boolean setIsEncrypted(){
-        return ENCRYPT;
+    public void setIsEncrypted(Boolean isEncrypt) {
+        ENCRYPT = isEncrypt;
     }
 
     public String getClientId() {
@@ -115,9 +121,16 @@ public class MqttPublisher implements MqttCallback {
         return parentContext;
     }
 
-    private boolean connectedToBroker(){
+    private boolean connectedToBroker() {
         return brokerConnection.isConnectedToInternet() && brokerConnection.getIsConnectedToBroker();
     }
+
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        ENCRYPT = sharedPreferences.getBoolean(parentContext.getString(R.string.saved_is_encrypted), true);
+
+    }
+
 
 }
 
