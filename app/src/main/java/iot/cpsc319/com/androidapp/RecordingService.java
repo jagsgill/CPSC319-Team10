@@ -31,6 +31,7 @@ public class RecordingService extends Service {
     private MqttPublisher mqttPublisher;
     private GpsRecorder gps;
     private int batteryLevel;
+    private BroadcastReceiver batteryLevelReceiver;
 
     public class LocalBinder extends Binder {
         WeakReference<RecordingService> getService() {
@@ -83,6 +84,9 @@ public class RecordingService extends Service {
             } catch (ConnectivityException e) {
                 Log.i(TAG, e.getMessage());
             }
+        }
+        if (batteryLevelReceiver != null) {
+            this.unregisterReceiver(batteryLevelReceiver);
         }
         Log.i(TAG, "RecordingService onDestroy");
     }
@@ -142,7 +146,7 @@ public class RecordingService extends Service {
 
     private void registerBatteryLevelReceiver() {
         IntentFilter filter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-        BroadcastReceiver batteryLevelReceiver = new BroadcastReceiver() {
+        batteryLevelReceiver = new BroadcastReceiver() {
             public void onReceive(Context context, Intent intent) {
                 int rawLevel = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
                 int scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
