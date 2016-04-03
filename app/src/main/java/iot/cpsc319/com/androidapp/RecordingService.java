@@ -102,7 +102,7 @@ public class RecordingService extends Service {
     // The last part of topic should match what is used in the server's broker manager!
     public void update() {
         try {
-            mqttPublisher.publish(new TopicMsg("sensors/" + clientId + "/combined",
+            mqttPublisher.publish(new TopicMsg("client/watch/" + clientId + "/combined",
                     "Acceleration: " + accelerometer.retrieveData()
                             + (gps.hasData() ? ("\r\nLocation: " + gps.retrieveData()) : " "
                             + "\r\nBattery Level: " + batteryLevel + "%")));

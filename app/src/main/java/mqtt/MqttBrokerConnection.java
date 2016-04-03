@@ -22,7 +22,6 @@ import java.net.URL;
 import java.util.concurrent.ExecutionException;
 
 import javax.net.SocketFactory;
-import javax.net.ssl.SSLSocketFactory;
 
 /**
  * This class is used to manage a connection to an MQTT broker. The network operations are
@@ -47,6 +46,11 @@ public class MqttBrokerConnection {
             "https://storage.googleapis.com/ssl-team10-cs319/broker_ips.txt"; // file containing broker's IP address
     private String brokerInsecurePort = "1883";
     private String brokerSecurePort = "8883";
+    private String topicWatchStatus;
+    private TopicMsg disconnectTopicMsg;
+    private TopicMsg connectTopicMsg;
+    private String disconnectMsg;
+    private String connectMsg;
 
     private MqttPublisher publisher;
     private MqttConnectOptions connectOptions;
@@ -62,12 +66,21 @@ public class MqttBrokerConnection {
     public MqttBrokerConnection(Context parentContext, String clientId, MqttPublisher publisher, boolean encrypted){
         this.parentContext = parentContext;
         this.clientId = clientId;
+        this.topicWatchStatus = "client/watch/" + clientId + "/status";
+        this.disconnectMsg = "0 " + clientId;
+        this.connectMsg = "1 " + clientId;
+        this.disconnectTopicMsg = new TopicMsg(topicWatchStatus, disconnectMsg, 0, true);
+        this.connectTopicMsg = new TopicMsg(topicWatchStatus, connectMsg, 0, true);
         this.publisher = publisher;
         this.ENCRYPT = encrypted;
         this.isConnectedToBroker = false;
     }
 
     public void startAndWaitForConnectionToBroker() throws ConnectivityException {
+
+        if (getIsConnectedToBroker()) {
+            return;
+        }
 
         this.connectOptions = createConnectOptions();
         setBrokerUrl(); // must be done before creating a client
@@ -88,7 +101,8 @@ public class MqttBrokerConnection {
 
     public void stopConnection() throws ConnectivityException {
         try {
-            if (getMqttClient() != null) {
+            if (getMqttClient() != null && getIsConnectedToBroker()) {
+                publisher.publish(disconnectTopicMsg);
                 getMqttClient().disconnect();
             }
         } catch (MqttException e) {
@@ -103,7 +117,10 @@ public class MqttBrokerConnection {
         System.out.println("# Starting connect optinos");
         connectOptions.setUserName(USERNAME);
         connectOptions.setPassword(PASSWORD.toCharArray());
+        //connectOptions.setWill(topicWatchStatus, disconnectMsg.getBytes(), 0, true);
+        //System.out.println("##### will-topic set to: " + topicWatchStatus);
 
+        System.out.println("#### Use encryption? " + ENCRYPT);
         if (ENCRYPT){
             SSLSupplier sslSupplier = new SSLSupplier(parentContext);
             SocketFactory sf = null;
@@ -200,6 +217,10 @@ public class MqttBrokerConnection {
         return status;
     }
 
+    public TopicMsg getConnectTopicMsg() {
+        return connectTopicMsg;
+    }
+
     private class ConnectToBrokerTask extends AsyncTask {
 
         @Override
@@ -209,6 +230,7 @@ public class MqttBrokerConnection {
             try {
                 startConnectionToBroker();
             } catch (ConnectivityException e) {
+                System.out.println("### Exception while connecting to broker: " + e.getClass());
                 exception = e;
             }
             System.out.println("#### Finished async task: connected to broker? " + getIsConnectedToBroker());
@@ -222,8 +244,10 @@ public class MqttBrokerConnection {
 
             IMqttToken connectToken = null;
             try {
+                System.out.println("### Starting connection attempt.");
                 connectToken = getMqttClient().connect(getConnectOptions());
                 connectToken.waitForCompletion();
+                System.out.print(("### Finishing waiting for connection"));
                 setIsConnectedToBroker(true);
             } catch (MqttException e) {
                 String msg = e.getMessage();

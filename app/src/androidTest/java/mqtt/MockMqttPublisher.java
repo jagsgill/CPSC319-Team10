@@ -31,18 +31,18 @@ public class MockMqttPublisher extends MqttPublisher {
         brokerUrls.add("broker.mqttdashboard.com:1883");
     }
 
-    @Override
-    public void setupClient(){
-        for(int i = 0; i < brokerUrls.size(); i++) {
-            //super.setBrokerUrl(this.brokerUrls.get(i));
-            super.setupClient();
-            // if successfully connected to a broker, then don't look at the others
-            if (super.getClient() != null){
-                return;
-            }
-        }
-
-        // if we reach here, we could not connect to any brokers
-        throw new Error("Could not connect to any brokers!");
-    }
+//    @Override
+//    public void setupClient(){
+//        for(int i = 0; i < brokerUrls.size(); i++) {
+//            //super.setBrokerUrl(this.brokerUrls.get(i));
+//            super.setupClient();
+//            // if successfully connected to a broker, then don't look at the others
+//            if (super.getClient() != null){
+//                return;
+//            }
+//        }
+//
+//        // if we reach here, we could not connect to any brokers
+//        throw new Error("Could not connect to any brokers!");
+//    }
 }

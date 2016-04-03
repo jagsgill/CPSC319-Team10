@@ -101,6 +101,7 @@ public class SSLSupplier {
         // load CA certificate
         String caCertFile = getPath("ca.crt");
         getFile(urlCaCertificate, caCertFile);
+        System.out.println("### \n" + caCertFile);
 
         PEMParser reader = new PEMParser(new InputStreamReader(
                 new BufferedInputStream(new FileInputStream(caCertFile))));
@@ -116,6 +117,7 @@ public class SSLSupplier {
         // load client certificate
         String clientCertFile = getPath("client.pem");
         getFile(urlClientCertificate, clientCertFile);
+        System.out.println("### \n" + caCertFile);
 
         reader = new PEMParser(new InputStreamReader(
                 new BufferedInputStream(new FileInputStream(clientCertFile))));
@@ -131,6 +133,7 @@ public class SSLSupplier {
         // load client private key
         String clientKeyFile = getPath("client.key");
         getFile(urlClientKey, clientKeyFile);
+        System.out.println("### \n" + caCertFile);
 
         reader = new PEMParser(new InputStreamReader(
                 new BufferedInputStream(new FileInputStream(clientKeyFile))));
@@ -173,6 +176,7 @@ public class SSLSupplier {
             try {
                 downloadFile((String) params[0], (String) params[1]);
             } catch (IOException e) {
+                System.out.println("#### SSL exception while downloading file: " + e.getMessage());
                 exception = e;
             }
             return exception;
@@ -205,6 +209,7 @@ public class SSLSupplier {
 
                 while ((line = reader.readLine()) != null) {
                     out.write((line + "\n").getBytes());
+                    System.out.println(line);
                 }
 
             }finally {

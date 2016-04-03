@@ -46,6 +46,7 @@ public class MqttPublisher implements MqttCallback, SharedPreferences.OnSharedPr
         this.mqttClient = brokerConnection.getMqttClient();
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(parentContext);
         sharedPreferences.registerOnSharedPreferenceChangeListener(this);
+        publish(brokerConnection.getConnectTopicMsg());
     }
 
     public void stopConnection() throws ConnectivityException {
@@ -59,9 +60,9 @@ public class MqttPublisher implements MqttCallback, SharedPreferences.OnSharedPr
         if (connectedToBroker()) {
             String topic = tm.getTopic();
             String _msg = tm.getMsg();
-            MqttMessage msg = new MqttMessage(_msg.getBytes());
+            //MqttMessage msg = new MqttMessage(_msg.getBytes());
             try {
-                IMqttToken sendToken = mqttClient.publish(topic, msg);
+                IMqttToken sendToken = mqttClient.publish(topic, tm.getMsg().getBytes(), tm.getQos(), tm.isRetained());
                 sendToken.waitForCompletion();
                 Log.i(TAG, "message sent");
             } catch (MqttException e) {
