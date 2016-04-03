@@ -1,12 +1,14 @@
 package sensors;
 
 import iot.cpsc319.com.androidapp.RecordingService;
+import mqtt.MqttPublisher;
 import sensordata.SensorDataPoint;
 import sensordata.SensorDataSet;
 
 public abstract class Recorder<T extends SensorDataPoint> {
     protected SensorDataSet<T> data = new SensorDataSet<>();
     protected RecordingService service;
+    protected MqttPublisher publisher;
 
     protected Recorder(RecordingService recordingService) {
         this.service = recordingService;

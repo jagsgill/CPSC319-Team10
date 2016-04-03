@@ -11,6 +11,7 @@ import java.lang.ref.WeakReference;
 import java.lang.reflect.Method;
 
 import mqtt.ConnectivityException;
+import sensors.BatteryRecorder;
 import sensors.GpsRecorder;
 import mqtt.MqttPublisher;
 import mqtt.TopicMsg;
@@ -26,6 +27,7 @@ public class RecordingService extends Service {
     private AccRecorder accelerometer;
     private MqttPublisher mqttPublisher;
     private GpsRecorder gps;
+    private BatteryRecorder battery;
 
     public class LocalBinder extends Binder {
         WeakReference<RecordingService> getService() {
@@ -54,6 +56,9 @@ public class RecordingService extends Service {
         accelerometer = new AccRecorder(this);
         accelerometer.start();
 
+        battery = new BatteryRecorder(this);
+        battery.start();
+
         return Service.START_STICKY;
     }
 
@@ -65,6 +70,8 @@ public class RecordingService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
+        if (battery != null)
+            battery.stop();
         if (accelerometer != null)
             accelerometer.stop();
         if (gps != null)
@@ -79,18 +86,18 @@ public class RecordingService extends Service {
         Log.i(TAG, "RecordingService onDestroy");
     }
 
-    // format data and publish when called
+    // format data and publish
     public void update() {
         try {
-            mqttPublisher.publish(new TopicMsg("hello/world",
-                    "Acceleration: " + accelerometer.retrieveData()
-                            + (gps.hasData() ? ("\r\nLocation: " + gps.retrieveData()) : " ")));
+            String msg = String.format("%s&%s&%s", accelerometer.retrieveData(), gps.retrieveData(),
+                    battery.retrieveData());
+            mqttPublisher.publish(new TopicMsg("hello/world", msg));
         } catch (ConnectivityException e) {
             MainActivity act;
             if ((act = mMainActivity.get()) != null) {
                 act.buttonOff();
             }
-            Toast.makeText(this, "Network not found, exiting...", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Network not found, exiting...", Toast.LENGTH_LONG).show();
             stopSelf();
         }
     }

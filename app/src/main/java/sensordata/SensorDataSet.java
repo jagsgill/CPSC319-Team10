@@ -21,7 +21,7 @@ public class SensorDataSet<T extends SensorDataPoint> {
 
     public String flushToString() {
         if (isEmpty())
-            return null;
+            return "";
 
         StringBuilder sb = new StringBuilder();
         T point;

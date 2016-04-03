@@ -166,6 +166,7 @@ public class MqttPublisher implements MqttCallback {
         connectOptions = new MqttConnectOptions();
         connectOptions.setUserName(USERNAME);
         connectOptions.setPassword(PASSWORD.toCharArray());
+
         try {
             SSLContext sslContext = SSLContext.getInstance("TLSv1.2");
             sslContext.init(null, null, null);
@@ -173,6 +174,7 @@ public class MqttPublisher implements MqttCallback {
         } catch (NoSuchAlgorithmException | KeyManagementException e) {
             e.printStackTrace();
         }
+
     }
 
     private boolean networkAvailable() {

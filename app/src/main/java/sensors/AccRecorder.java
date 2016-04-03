@@ -7,10 +7,15 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.preference.PreferenceManager;
+import android.widget.Toast;
 
 
+import iot.cpsc319.com.androidapp.MainActivity;
 import iot.cpsc319.com.androidapp.R;
 import iot.cpsc319.com.androidapp.RecordingService;
+import mqtt.ConnectivityException;
+import mqtt.MqttPublisher;
+import mqtt.TopicMsg;
 import sensordata.AccDataPoint;
 
 public class AccRecorder extends Recorder<AccDataPoint> implements SensorEventListener,
@@ -52,7 +57,7 @@ public class AccRecorder extends Recorder<AccDataPoint> implements SensorEventLi
         AccDataPoint point = new AccDataPoint(x, y, z, currTime);
         data.addDataPoint(point);
 
-        if (currTime - lastUploadTime > uploadRate) {
+        if (currTime - lastUploadTime > uploadRate && !data.isEmpty()) {
             lastUploadTime = currTime;
             service.update();
         }

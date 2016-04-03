@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.util.Log;
 
 import iot.cpsc319.com.androidapp.RecordingService;
+import mqtt.MqttPublisher;
 import sensordata.GpsDataPoint;
 import sensors.Recorder;
 
