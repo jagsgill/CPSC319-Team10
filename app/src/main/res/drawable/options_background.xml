@@ -41,7 +41,7 @@
         </item>
     -->
     <item>
-        <shape>
+        <shape android:shape="oval">
             <gradient
                 android:endColor="@color/orange4"
                 android:startColor="@color/orange5"

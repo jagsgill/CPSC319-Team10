@@ -47,9 +47,13 @@
     <android.support.design.widget.FloatingActionButton
         android:layout_width="50dp"
         android:layout_height="50dp"
+        android:layout_marginBottom="10dp"
+        android:layout_marginEnd="10dp"
+        android:scaleType="center"
         android:clickable="true"
         android:onClick="onSettingsClick"
-        app:backgroundTint="@color/orange4"
+        android:elevation="8dp"
+        android:background="@drawable/options_background"
         app:layout_anchor="@id/layoutView"
         app:layout_anchorGravity="top|right|end"
         android:src="@drawable/options_icon"/>

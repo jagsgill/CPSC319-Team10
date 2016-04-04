@@ -128,7 +128,7 @@ public class MqttBrokerConnection {
         System.out.println("#### Use encryption? " + ENCRYPT);
 
         if (ENCRYPT){
-            /*
+
             SSLSupplier sslSupplier = new SSLSupplier(parentContext);
             SocketFactory sf = null;
             try {
@@ -137,10 +137,9 @@ public class MqttBrokerConnection {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-
             connectOptions.setSocketFactory(sf);
-            */
 
+            /*
             try {
                 SSLContext context = SSLContext.getInstance("TLSv1.2");
                 context.init(null, null, null);
@@ -148,6 +147,7 @@ public class MqttBrokerConnection {
             } catch (NoSuchAlgorithmException | KeyManagementException e) {
                 throw new ConnectivityException(e);
             }
+            */
         }
 
         System.out.println("# Reached end of connection options");
@@ -193,12 +193,13 @@ public class MqttBrokerConnection {
     }
 
     private void setBrokerUrl() throws ConnectivityException {
+        /*
         if (ENCRYPT)
             BROKER_URL = "ssl://54.92.237.174:27981"; // mqtt cloud
         else
             BROKER_URL = "tcp://54.92.237.174:17981";
+        */
 
-        /*
         SetBrokerUrlTask task = new SetBrokerUrlTask();
         task.execute();
 
@@ -210,7 +211,7 @@ public class MqttBrokerConnection {
         } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
         }
-*/
+
     }
 
     private MqttConnectOptions getConnectOptions() {

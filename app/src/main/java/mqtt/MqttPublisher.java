@@ -70,8 +70,9 @@ public class MqttPublisher implements MqttCallback, SharedPreferences.OnSharedPr
                 Log.i(TAG, "message sent");
             } catch (MqttException e) {
                 Log.i(TAG, "restarting, hasInternet = " + brokerConnection.isConnectedToInternet());
-                stopConnection();
-                startConnection();
+                throw new ConnectivityException(e);
+                //stopConnection();
+                //startConnection();
             }
         } else {
             Log.i(TAG, "restarting 2");
