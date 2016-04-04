@@ -102,13 +102,12 @@ public class RecordingService extends Service {
     public void update() {
         try {
             //client/watch/" + clientId + "/combined
-            /*
-            mqttPublisher.publish(new TopicMsg("abc",
+            mqttPublisher.publish(new TopicMsg("client/watch/"+clientId+"/combined",
                     "Acceleration: " + accelerometer.retrieveData()
                             + (gps.hasData() ? ("\r\nLocation: " + gps.retrieveData()) : " "
-                            + "\r\nBattery Level: " + battery.retrieveData())));
-                            */
-            mqttPublisher.publish((new TopicMsg("abc", "hellohellohellohellohellohello")));
+                            + "\r\nBattery_Level: " + battery.retrieveData())));
+
+//            mqttPublisher.publish((new TopicMsg("abc", "hellohellohellohellohellohello")));
         } catch (ConnectivityException e) {
             MainActivity act;
             if (mMainActivity != null && (act = mMainActivity.get()) != null) {
