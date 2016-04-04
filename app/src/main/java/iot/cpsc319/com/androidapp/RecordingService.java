@@ -1,7 +1,11 @@
 package iot.cpsc319.com.androidapp;
 
 import android.app.Service;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.os.BatteryManager;
 import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
@@ -19,7 +23,7 @@ import sensors.AccRecorder;
 
 public class RecordingService extends Service {
 
-    private static final String TAG =  "SomeApp";
+    private static final String TAG = "SomeApp";
 
     private final String clientId = getSerialNumber();
     private LocalBinder mBinder = new LocalBinder();
@@ -69,7 +73,6 @@ public class RecordingService extends Service {
 
     @Override
     public void onDestroy() {
-        super.onDestroy();
         if (battery != null)
             battery.stop();
         if (accelerometer != null)
@@ -83,21 +86,32 @@ public class RecordingService extends Service {
                 Log.i(TAG, e.getMessage());
             }
         }
+        super.onDestroy();
         Log.i(TAG, "RecordingService onDestroy");
     }
 
-    // format data and publish
+    // format data and publish when called
+    // TODO: try to separate sensor data publishing?
+    // Watches can publish any topic under sensors/<client id>/<...>. Other topics are banned!
+    // e.g. sensors/<client id>/accel
+    //      sensors/<client id>/gps
+    //      sensors/<client id>/batteryanduploadrate
+    // If not separated, broker manager can currently handle combined data under sensors/<client id>/combined
+    // which includes accel & gps data only at the moment (same as for first demo)...
+    // The last part of topic should match what is used in the server's broker manager!
     public void update() {
         try {
-            String msg = String.format("%s&%s&%s", accelerometer.retrieveData(), gps.retrieveData(),
-                    battery.retrieveData());
-            mqttPublisher.publish(new TopicMsg("hello/world", msg));
+            //client/watch/" + clientId + "/combined
+            mqttPublisher.publish(new TopicMsg("abc",
+                    "Acceleration: " + accelerometer.retrieveData()
+                            + (gps.hasData() ? ("\r\nLocation: " + gps.retrieveData()) : " "
+                            + "\r\nBattery Level: " + battery.retrieveData())));
         } catch (ConnectivityException e) {
             MainActivity act;
-            if ((act = mMainActivity.get()) != null) {
+            if (mMainActivity != null && (act = mMainActivity.get()) != null) {
                 act.buttonOff();
             }
-            Toast.makeText(this, "Network not found, exiting...", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "Network dead!!!!!!!!!!!!!", Toast.LENGTH_LONG).show();
             stopSelf();
         }
     }
@@ -109,7 +123,7 @@ public class RecordingService extends Service {
     public void onStep(int step) {
         step++;
         MainActivity act;
-        if ((act = mMainActivity.get()) != null)
+        if (mMainActivity!=null && (act = mMainActivity.get()) != null)
             act.display(Integer.toString(step));
     }
 
@@ -117,15 +131,13 @@ public class RecordingService extends Service {
      * Returns the unique serial number of the device.
      * More info at {@link 'http://developer.samsung.com/technical-doc/view.do?v=T000000103'}
      */
-    private String getSerialNumber(){
+    private String getSerialNumber() {
         String serialnum = null;
         try {
             Class<?> c = Class.forName("android.os.SystemProperties");
-            Method get = c.getMethod("get", String.class, String.class );
-            serialnum = (String)(   get.invoke(c, "ro.serialno", "unknown" )  );
-        }
-        catch (Exception ignored)
-        {
+            Method get = c.getMethod("get", String.class, String.class);
+            serialnum = (String) (get.invoke(c, "ro.serialno", "unknown"));
+        } catch (Exception ignored) {
             // we should not reach here
             // there should be a serial number available for all watches used...
         }

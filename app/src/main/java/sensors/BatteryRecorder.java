@@ -6,13 +6,15 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.BatteryManager;
 
+import java.lang.ref.WeakReference;
+
 import iot.cpsc319.com.androidapp.RecordingService;
 import mqtt.MqttPublisher;
 import sensordata.BatteryDataPoint;
 
 public class BatteryRecorder extends Recorder<BatteryDataPoint> {
     int preivousLevel = -100;
-    BroadcastReceiver batteryLevelReceiver;
+    WeakReference<BroadcastReceiver> batteryLevelReceiver;
 
     public BatteryRecorder(RecordingService recordingService) {
         super(recordingService);
@@ -20,8 +22,9 @@ public class BatteryRecorder extends Recorder<BatteryDataPoint> {
 
     @Override
     public void start() {
+        stop();
         IntentFilter filter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-        batteryLevelReceiver = new BroadcastReceiver() {
+        batteryLevelReceiver = new WeakReference<BroadcastReceiver>(new BroadcastReceiver() {
             public void onReceive(Context context, Intent intent) {
                 int rawLevel = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
                 int scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
@@ -34,14 +37,19 @@ public class BatteryRecorder extends Recorder<BatteryDataPoint> {
                     }
                 }
             }
-        };
-        service.registerReceiver(batteryLevelReceiver, filter);
+        });
+        BroadcastReceiver receiver;
+        if (batteryLevelReceiver != null && (receiver = batteryLevelReceiver.get()) != null)
+            service.registerReceiver(receiver, filter);
     }
 
     @Override
     public void stop() {
-        if (batteryLevelReceiver != null) {
-            service.unregisterReceiver(batteryLevelReceiver);
+        BroadcastReceiver receiver;
+        if (batteryLevelReceiver != null && (receiver = batteryLevelReceiver.get()) != null) {
+            service.unregisterReceiver(receiver);
+            batteryLevelReceiver = null;
         }
+
     }
 }

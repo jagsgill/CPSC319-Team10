@@ -3,7 +3,7 @@ package mqtt;
 public class ConnectivityException extends Exception {
 
     public ConnectivityException(Exception e) {
-        super(e.getMessage());
+        super(e);
     }
 
     public ConnectivityException(String msg) {

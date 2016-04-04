@@ -13,6 +13,9 @@
             android:entries="@array/step_counter_sensitivity_keys"
             android:entryValues="@array/step_counter_sensitivity_values"
             android:defaultValue="15"/>
+        <SwitchPreference
+            android:key="@string/saved_is_encrypted"
+            android:title="Encrypt Data"/>
     </PreferenceCategory>
 
 </PreferenceScreen>

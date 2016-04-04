@@ -7,10 +7,21 @@ public class TopicMsg {
 
     private String topic;
     private String msg;
+    private int qos;
+    private boolean retained;
 
     public TopicMsg(String topic, String msg) {
         this.topic = topic;
         this.msg = msg;
+        this.qos = 0;
+        this.retained = false;
+    }
+
+    public TopicMsg(String topic, String msg, int qos, boolean retained){
+        this.topic = topic;
+        this.msg = msg;
+        this.qos = qos;
+        this.retained = retained;
     }
 
     public String getTopic() {
@@ -19,5 +30,21 @@ public class TopicMsg {
 
     public String getMsg() {
         return msg;
+    }
+
+    public int getQos() {
+        return qos;
+    }
+
+    public void setQos(int qos) {
+        this.qos = qos;
+    }
+
+    public boolean isRetained() {
+        return retained;
+    }
+
+    public void setRetained(boolean retained) {
+        this.retained = retained;
     }
 }
