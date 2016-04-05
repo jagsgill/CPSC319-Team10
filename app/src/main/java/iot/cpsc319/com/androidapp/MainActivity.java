@@ -31,17 +31,24 @@ public class MainActivity extends AppCompatActivity {
     private boolean serviceRunning;
     private Button button;
 
-    private boolean pressedOnce = false;
+    private long lastPressTime;
 
     private ServiceConnection mConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName className, IBinder service) {
             Log.i(TAG, "MainActivity onServiceConnected");
-            buttonOn();
+            //buttonOn();
             mService = ((RecordingService.LocalBinder) service).getService();
             RecordingService s;
             if ((s = mService.get()) != null) {
-                s.setMainActivity(new WeakReference<>(MainActivity.this));
+                if (s.errFlag) {
+                    Toast.makeText(MainActivity.this, "Network not found, exiting...", Toast.LENGTH_LONG).show();
+                    buttonOff();
+                    stopService(recordingIntent);
+                    unbindService(mConnection);
+                } else {
+                    s.setMainActivity(new WeakReference<>(MainActivity.this));
+                }
             }
         }
 
@@ -85,10 +92,25 @@ public class MainActivity extends AppCompatActivity {
 
     public void onButtonClick(View view) {
         if (button.getText().equals(getString(R.string.button_start))) {
+            buttonOn();
             recordingIntent = new Intent(this, RecordingService.class);
             startService(recordingIntent);
             bindService(new Intent(this, RecordingService.class), mConnection, 0);
-        } else if (pressedOnce) {
+        } else {
+            long time = System.currentTimeMillis();
+            if (time - lastPressTime < 2000) {
+                buttonOff();
+                stopService(recordingIntent);
+                unbindService(mConnection);
+            } else {
+                lastPressTime = time;
+                Toast.makeText(this, "Press again to stop", Toast.LENGTH_SHORT).show();
+            }
+
+        }
+            /*
+            else
+        } if (pressedOnce) {
             //second press
             buttonOff();
             stopService(recordingIntent);
@@ -104,6 +126,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             }, 2000);
         }
+        */
     }
 
     public void onSettingsClick(View view) {

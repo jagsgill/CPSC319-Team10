@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.BatteryManager;
+import android.os.Handler;
 
 import java.lang.ref.WeakReference;
 
@@ -13,7 +14,7 @@ import mqtt.MqttPublisher;
 import sensordata.BatteryDataPoint;
 
 public class BatteryRecorder extends Recorder<BatteryDataPoint> {
-    int preivousLevel = -100;
+    int previousLevel = -100;
     WeakReference<BroadcastReceiver> batteryLevelReceiver;
 
     public BatteryRecorder(RecordingService recordingService) {
@@ -28,19 +29,19 @@ public class BatteryRecorder extends Recorder<BatteryDataPoint> {
             public void onReceive(Context context, Intent intent) {
                 int rawLevel = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
                 int scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
-
                 if (rawLevel >= 0 && scale > 0) {
-                    int level = (rawLevel * 100) / scale;
-                    if (Math.abs(preivousLevel - level) > 5) {
-                        preivousLevel = level;
+                    int level = rawLevel / scale;
+                        previousLevel = level;
                         data.addDataPoint(new BatteryDataPoint(level));
-                    }
                 }
             }
         });
         BroadcastReceiver receiver;
-        if (batteryLevelReceiver != null && (receiver = batteryLevelReceiver.get()) != null)
+        if (batteryLevelReceiver != null && (receiver = batteryLevelReceiver.get()) != null) {
             service.registerReceiver(receiver, filter);
+        }
+
+
     }
 
     @Override
@@ -50,6 +51,6 @@ public class BatteryRecorder extends Recorder<BatteryDataPoint> {
             service.unregisterReceiver(receiver);
             batteryLevelReceiver = null;
         }
-
     }
+
 }

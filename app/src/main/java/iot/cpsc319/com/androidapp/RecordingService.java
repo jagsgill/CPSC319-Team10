@@ -8,6 +8,8 @@ import android.content.IntentFilter;
 import android.os.BatteryManager;
 import android.os.Binder;
 import android.os.IBinder;
+import android.provider.Settings;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -25,13 +27,15 @@ public class RecordingService extends Service {
 
     private static final String TAG = "SomeApp";
 
-    private final String clientId = getSerialNumber();
+    //private final String clientId = getSerialNumber();
     private LocalBinder mBinder = new LocalBinder();
     private WeakReference<MainActivity> mMainActivity;
     private AccRecorder accelerometer;
     private MqttPublisher mqttPublisher;
     private GpsRecorder gps;
     private BatteryRecorder battery;
+    private String devId;
+    boolean errFlag;
 
     public class LocalBinder extends Binder {
         WeakReference<RecordingService> getService() {
@@ -44,13 +48,14 @@ public class RecordingService extends Service {
         super.onStartCommand(intent, flags, startId);
         Log.i(TAG, "RecordingService Start");
 
-        mqttPublisher = new MqttPublisher(clientId, getApplicationContext());
+        devId = ((TelephonyManager)getSystemService(Context.TELEPHONY_SERVICE)).getDeviceId();
+
+        mqttPublisher = new MqttPublisher(devId, getApplicationContext());
         try {
             mqttPublisher.startConnection();
         } catch (ConnectivityException e) {
+            errFlag = true;
             Log.i(TAG, e.getMessage());
-            Toast.makeText(this, "Network not found, exiting...", Toast.LENGTH_SHORT).show();
-            stopSelf();
             return 0;
         }
 
@@ -101,14 +106,10 @@ public class RecordingService extends Service {
     // The last part of topic should match what is used in the server's broker manager!
     public void update() {
         try {
-            //client/watch/" + clientId + "/combined
-            /*
-            mqttPublisher.publish(new TopicMsg("abc",
-                    "Acceleration: " + accelerometer.retrieveData()
-                            + (gps.hasData() ? ("\r\nLocation: " + gps.retrieveData()) : " "
-                            + "\r\nBattery Level: " + battery.retrieveData())));
-                            */
-            mqttPublisher.publish((new TopicMsg("abc", "hellohellohellohellohellohello")));
+            String msg = "Acceleration: " + accelerometer.retrieveData()
+                    + (gps.hasData() ? ("\r\nLocation: " + gps.retrieveData()) : " ")
+                    + (battery.hasData() ? ("\r\nBattery Level: " + battery.retrieveData()) : " ");
+            mqttPublisher.publish(new TopicMsg(devId,msg));
         } catch (ConnectivityException e) {
             MainActivity act;
             if (mMainActivity != null && (act = mMainActivity.get()) != null) {
@@ -134,7 +135,8 @@ public class RecordingService extends Service {
      * Returns the unique serial number of the device.
      * More info at {@link 'http://developer.samsung.com/technical-doc/view.do?v=T000000103'}
      */
-    private String getSerialNumber() {
+    // todo get unique device number
+/*    private String getSerialNumber() {
         String serialnum = null;
         try {
             Class<?> c = Class.forName("android.os.SystemProperties");
@@ -146,4 +148,5 @@ public class RecordingService extends Service {
         }
         return serialnum;
     }
+    */
 }
