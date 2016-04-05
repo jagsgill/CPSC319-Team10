@@ -1,20 +1,15 @@
 package iot.cpsc319.com.androidapp;
 
 import android.app.Service;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
-import android.os.BatteryManager;
 import android.os.Binder;
 import android.os.IBinder;
-import android.provider.Settings;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.widget.Toast;
 
 import java.lang.ref.WeakReference;
-import java.lang.reflect.Method;
 
 import mqtt.ConnectivityException;
 import sensors.BatteryRecorder;
@@ -108,7 +103,7 @@ public class RecordingService extends Service {
         try {
             String msg = "Acceleration: " + accelerometer.retrieveData()
                     + (gps.hasData() ? ("\r\nLocation: " + gps.retrieveData()) : " ")
-                    + (battery.hasData() ? ("\r\nBattery Level: " + battery.retrieveData()) : " ");
+                    + (battery.hasData() ? ("\r\nBattery_Level: " + battery.retrieveData() +) : " ");
             mqttPublisher.publish(new TopicMsg("client/watch/"+devId+"/combined",msg));
         } catch (ConnectivityException e) {
             MainActivity act;

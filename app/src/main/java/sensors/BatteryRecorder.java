@@ -5,17 +5,17 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.BatteryManager;
-import android.os.Handler;
+import android.util.Log;
 
 import java.lang.ref.WeakReference;
 
 import iot.cpsc319.com.androidapp.RecordingService;
-import mqtt.MqttPublisher;
 import sensordata.BatteryDataPoint;
 
 public class BatteryRecorder extends Recorder<BatteryDataPoint> {
+    static final String TAG = "SomeApp";
     int previousLevel = -100;
-    WeakReference<BroadcastReceiver> batteryLevelReceiver;
+    BroadcastReceiver batteryLevelReceiver;
 
     public BatteryRecorder(RecordingService recordingService) {
         super(recordingService);
@@ -25,30 +25,26 @@ public class BatteryRecorder extends Recorder<BatteryDataPoint> {
     public void start() {
         stop();
         IntentFilter filter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-        batteryLevelReceiver = new WeakReference<BroadcastReceiver>(new BroadcastReceiver() {
+        batteryLevelReceiver = new BroadcastReceiver() {
             public void onReceive(Context context, Intent intent) {
                 int rawLevel = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
                 int scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
                 if (rawLevel >= 0 && scale > 0) {
-                    int level = rawLevel / scale;
-                        previousLevel = level;
-                        data.addDataPoint(new BatteryDataPoint(level));
+                    int level = Math.round((rawLevel / (float) scale) * 100);
+                    previousLevel = level;
+                    data.addDataPoint(new BatteryDataPoint(level));
+                    Log.i(TAG, "Battery Level: " + level);
                 }
             }
-        });
-        BroadcastReceiver receiver;
-        if (batteryLevelReceiver != null && (receiver = batteryLevelReceiver.get()) != null) {
-            service.registerReceiver(receiver, filter);
-        }
+        };
 
-
+        service.registerReceiver(batteryLevelReceiver, filter);
     }
 
     @Override
     public void stop() {
-        BroadcastReceiver receiver;
-        if (batteryLevelReceiver != null && (receiver = batteryLevelReceiver.get()) != null) {
-            service.unregisterReceiver(receiver);
+        if (batteryLevelReceiver != null) {
+            service.unregisterReceiver(batteryLevelReceiver);
             batteryLevelReceiver = null;
         }
     }

@@ -41,6 +41,9 @@ public class MqttBrokerConnection {
 
     private static final String TAG = "SomeApp";
 
+    // true for google cloud; false for mqttCloud
+    private static final boolean brokerSelection = true;
+
     private String BROKER_URL;
     private String USERNAME = "defaultwatch";
     private String PASSWORD = "vandricowatch";
@@ -128,26 +131,25 @@ public class MqttBrokerConnection {
         System.out.println("#### Use encryption? " + ENCRYPT);
 
         if (ENCRYPT){
-
-            SSLSupplier sslSupplier = new SSLSupplier(parentContext);
-            SocketFactory sf = null;
-            try {
-                sf = sslSupplier.getSocketFactory();
-                System.out.println("##### SocketFactory type: " + sf.getClass().toString());
-            } catch (Exception e) {
-                e.printStackTrace();
+            if (brokerSelection) {
+                SSLSupplier sslSupplier = new SSLSupplier(parentContext);
+                SocketFactory sf = null;
+                try {
+                    sf = sslSupplier.getSocketFactory();
+                    System.out.println("##### SocketFactory type: " + sf.getClass().toString());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                connectOptions.setSocketFactory(sf);
+            } else {
+                try {
+                    SSLContext context = SSLContext.getInstance("TLSv1.2");
+                    context.init(null, null, null);
+                    connectOptions.setSocketFactory(context.getSocketFactory());
+                } catch (NoSuchAlgorithmException | KeyManagementException e) {
+                    throw new ConnectivityException(e);
+                }
             }
-            connectOptions.setSocketFactory(sf);
-
-            /*
-            try {
-                SSLContext context = SSLContext.getInstance("TLSv1.2");
-                context.init(null, null, null);
-                connectOptions.setSocketFactory(context.getSocketFactory());
-            } catch (NoSuchAlgorithmException | KeyManagementException e) {
-                throw new ConnectivityException(e);
-            }
-            */
         }
 
         System.out.println("# Reached end of connection options");
@@ -193,25 +195,24 @@ public class MqttBrokerConnection {
     }
 
     private void setBrokerUrl() throws ConnectivityException {
-        /*
-        if (ENCRYPT)
-            BROKER_URL = "ssl://54.92.237.174:27981"; // mqtt cloud
-        else
-            BROKER_URL = "tcp://54.92.237.174:17981";
-        */
+        if (! brokerSelection) {
+            if (ENCRYPT)
+                BROKER_URL = "ssl://54.92.237.174:27981";
+            else
+                BROKER_URL = "tcp://54.92.237.174:17981";
+        } else {
+            SetBrokerUrlTask task = new SetBrokerUrlTask();
+            task.execute();
 
-        SetBrokerUrlTask task = new SetBrokerUrlTask();
-        task.execute();
-
-        try {
-            ConnectivityException e = (ConnectivityException) task.get();
-            if (e != null){
-                throw e;
+            try {
+                ConnectivityException e = (ConnectivityException) task.get();
+                if (e != null) {
+                    throw e;
+                }
+            } catch (InterruptedException | ExecutionException e) {
+                e.printStackTrace();
             }
-        } catch (InterruptedException | ExecutionException e) {
-            e.printStackTrace();
         }
-
     }
 
     private MqttConnectOptions getConnectOptions() {
