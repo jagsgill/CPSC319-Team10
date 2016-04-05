@@ -122,8 +122,8 @@ public class MqttBrokerConnection {
         System.out.println("# Starting connect options");
         connectOptions.setUserName(USERNAME);
         connectOptions.setPassword(PASSWORD.toCharArray());
-        //connectOptions.setWill(topicWatchStatus, disconnectMsg.getBytes(), 0, true);
-        //System.out.println("##### will-topic set to: " + topicWatchStatus);
+        connectOptions.setWill(topicWatchStatus, disconnectMsg.getBytes(), 0, true);
+        System.out.println("##### will-topic set to: " + topicWatchStatus);
 
         System.out.println("#### Use encryption? " + ENCRYPT);
 

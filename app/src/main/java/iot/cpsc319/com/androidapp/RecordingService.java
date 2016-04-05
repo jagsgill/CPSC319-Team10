@@ -109,7 +109,7 @@ public class RecordingService extends Service {
             String msg = "Acceleration: " + accelerometer.retrieveData()
                     + (gps.hasData() ? ("\r\nLocation: " + gps.retrieveData()) : " ")
                     + (battery.hasData() ? ("\r\nBattery Level: " + battery.retrieveData()) : " ");
-            mqttPublisher.publish(new TopicMsg(devId,msg));
+            mqttPublisher.publish(new TopicMsg("client/watch/"+devId+"/combined",msg));
         } catch (ConnectivityException e) {
             MainActivity act;
             if (mMainActivity != null && (act = mMainActivity.get()) != null) {
