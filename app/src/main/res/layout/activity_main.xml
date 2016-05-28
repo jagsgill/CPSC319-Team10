@@ -59,13 +59,4 @@
         app:layout_anchorGravity="top|right|end"/>
 -->
 
-    <android.support.design.widget.FloatingActionButton
-        android:layout_width="50dp"
-        android:layout_height="50dp"
-        android:src="@drawable/options_icon"
-        android:onClick="onSettingsClick"
-        app:backgroundTint="@color/orange4"
-        app:layout_anchor="@id/layoutView"
-        app:layout_anchorGravity="top|right|end"/>
-
 </android.support.design.widget.CoordinatorLayout>

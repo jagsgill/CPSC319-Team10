@@ -42,7 +42,7 @@ public class MqttBrokerConnection {
     private static final String TAG = "SomeApp";
 
     // true for google cloud; false for mqttCloud
-    private static final boolean brokerSelection = true;
+    private static final boolean brokerSelection = false;
 
     private String BROKER_URL;
     private String USERNAME = "defaultwatch";
@@ -78,7 +78,7 @@ public class MqttBrokerConnection {
         this.disconnectTopicMsg = new TopicMsg(topicWatchStatus, disconnectMsg, 0, true);
         this.connectTopicMsg = new TopicMsg(topicWatchStatus, connectMsg, 0, true);
         this.publisher = publisher;
-        this.ENCRYPT = encrypted;
+        this.ENCRYPT = false;
         this.isConnectedToBroker = false;
     }
 
@@ -197,9 +197,9 @@ public class MqttBrokerConnection {
     private void setBrokerUrl() throws ConnectivityException {
         if (! brokerSelection) {
             if (ENCRYPT)
-                BROKER_URL = "ssl://54.92.237.174:27981";
+                BROKER_URL = "ssl://158.69.197.224:8883";
             else
-                BROKER_URL = "tcp://54.92.237.174:17981";
+                BROKER_URL = "tcp://158.69.197.224:1883";
         } else {
             SetBrokerUrlTask task = new SetBrokerUrlTask();
             task.execute();

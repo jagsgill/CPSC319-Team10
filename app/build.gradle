@@ -9,7 +9,7 @@ android {
     }
     defaultConfig {
         applicationId "iot.cpsc319.com.androidapp"
-        minSdkVersion 19
+        minSdkVersion 18
         targetSdkVersion 22
         versionCode 1
         versionName "1.0"
@@ -21,6 +21,8 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    productFlavors {
+    }
 }
 
 dependencies {
@@ -29,20 +31,20 @@ dependencies {
     compile files('libs/org.eclipse.paho.client.mqttv3-1.0.2.jar')
     /*
 
-        Note: we have a dependency issue here because we are using old APKs: test:runner and test:rules
-              depend on support-annotations 23.0.1 but we can't use this since our APK level is below 23.
-              So we have to exclude that module for the runner as described here:
-              http://stackoverflow.com/questions/28999124/resolved-versions-for-app-22-0-0-and-test-app-21-0-3-differ
+            Note: we have a dependency issue here because we are using old APKs: test:runner and test:rules
+                  depend on support-annotations 23.0.1 but we can't use this since our APK level is below 23.
+                  So we have to exclude that module for the runner as described here:
+                  http://stackoverflow.com/questions/28999124/resolved-versions-for-app-22-0-0-and-test-app-21-0-3-differ
 
-        +--- com.android.support:support-annotations:21.0.3 -> 23.0.1
-        +--- com.android.support.test:runner:0.4.1
-        |    +--- com.android.support.test:exposed-instrumentation-api-publish:0.4.1
-        |    +--- com.android.support:support-annotations:23.0.1
-        |    \--- junit:junit:4.12
-        |         \--- org.hamcrest:hamcrest-core:1.3
-        \--- com.android.support.test:rules:0.4.1
-             \--- com.android.support.test:runner:0.4.1 (*)
-         */
+            +--- com.android.support:support-annotations:21.0.3 -> 23.0.1
+            +--- com.android.support.test:runner:0.4.1
+            |    +--- com.android.support.test:exposed-instrumentation-api-publish:0.4.1
+            |    +--- com.android.support:support-annotations:23.0.1
+            |    \--- junit:junit:4.12
+            |         \--- org.hamcrest:hamcrest-core:1.3
+            \--- com.android.support.test:rules:0.4.1
+                 \--- com.android.support.test:runner:0.4.1 (*)
+             */
     //todo can we use older version? using 22 now because of the floating action button
     androidTestCompile 'com.android.support:support-annotations:22.2.0'
     androidTestCompile('com.android.support.test:runner:0.4.1') {
